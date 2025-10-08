@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO KeyPairs\n                (key_pair_id, private_key, public_key)\n            VALUES ($1, $2, $3);\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Bytea",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d6466912f2d29951cf4759f69abf103ef42cfba9bf2969305a73b30b0cda8f2a"
+}

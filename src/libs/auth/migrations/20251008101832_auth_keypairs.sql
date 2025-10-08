@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS KeyPairs (
+    key_pair_id UUID PRIMARY KEY,
+    private_key BYTEA NOT NULL,
+    public_key BYTEA NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

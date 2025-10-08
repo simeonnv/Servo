@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                RefreshTokens.refresh_token,\n                RefreshTokens.role,\n                RefreshTokens.created_at AS refresh_token_creation_date,\n                Accounts.username,\n                Accounts.account_id AS account_id,\n                Accounts.created_at AS account_creation_date\n            FROM\n                RefreshTokens\n            INNER JOIN Accounts ON\n                RefreshTokens.account_id = Accounts.account_id\n            WHERE refresh_token = $1;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "refresh_token",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "role",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "refresh_token_creation_date",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 3,
+        "name": "username",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "account_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "account_creation_date",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "710c4c9fbee856fc12d12cfb7a08d2282ddf915bcbc637ac70f61668f2577a16"
+}

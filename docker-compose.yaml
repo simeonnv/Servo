@@ -1,0 +1,25 @@
+services:
+  debug_db:
+    image: postgres:16
+    container_name: debug-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-root}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-root}
+      POSTGRES_DB: ${POSTGRES_DB:-debug}
+    volumes:
+      - debug:/var/lib/postgresql/data
+    labels:
+      kompose.init.containers.command: "echo Initializing reflector postgres database"
+      kompose.controller.expose.port: true
+    ports:
+      - "5555:5432"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  debug:
