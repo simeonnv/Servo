@@ -1,0 +1,5 @@
+name = "give me a name vro"
+listens = ["0.0.0.0:54321"]
+
+[[upstream]]
+address = "somecontianer:33333"

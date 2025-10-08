@@ -15,16 +15,16 @@ pub enum Error {
     InvalidRefreshToken(String),
 
     #[error("Crypto Error: {0}")]
-    CryptoError(crypto::Error),
+    CryptoError(servo_crypto::Error),
 
     #[error("Hash Error: {0}")]
     HashError(String), // Adjust type based on crypto::Error::HashError's structure
 }
 
-impl From<crypto::Error> for Error {
-    fn from(err: crypto::Error) -> Self {
+impl From<servo_crypto::Error> for Error {
+    fn from(err: servo_crypto::Error) -> Self {
         match err {
-            crypto::Error::HashError(err) => Error::HashError(err),
+            servo_crypto::Error::HashError(err) => Error::HashError(err),
             _ => Error::CryptoError(err),
         }
     }

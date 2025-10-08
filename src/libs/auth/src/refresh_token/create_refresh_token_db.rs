@@ -1,5 +1,5 @@
-use crypto::rand_string;
 use log::debug;
+use servo_crypto::rand_string;
 use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 

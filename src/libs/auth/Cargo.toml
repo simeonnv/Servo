@@ -1,5 +1,5 @@
 [package]
-name = "auth"
+name = "servo_auth"
 version = "0.1.0"
 edition = "2024"
 
@@ -22,5 +22,5 @@ sqlx = { workspace = true, features = [
     "uuid",
 ] }
 
-crypto = { workspace = true, features = ["falcon512", "argon2"] }
+servo_crypto = { workspace = true, features = ["falcon512", "argon2"] }
 # db = { workspace = true }

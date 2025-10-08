@@ -1,10 +1,12 @@
 [workspace]
-members = ["src/bin/servo", "src/libs/auth", "src/libs/crypto"]
+members = ["src/bin/servo", "src/libs/auth", "src/libs/crypto", "src/libs/toml"]
 
 
 [workspace.dependencies]
 
-crypto = { path = "src/libs/crypto" }
+servo_crypto = { path = "src/libs/crypto" }
+servo_auth = { path = "src/libs/auth" }
+servo_toml = { path = "src/libs/toml" }
 
 # async and parralelism
 dashmap = "6.1.0"

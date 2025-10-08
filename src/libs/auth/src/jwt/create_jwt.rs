@@ -1,8 +1,8 @@
 use base64::{Engine, prelude::BASE64_URL_SAFE_NO_PAD};
 use chrono::{Duration, Utc};
-use crypto::sign::falcon512::sign_falcon512::sign_falcon512;
 use log::debug;
 use serde_json::json;
+use servo_crypto::sign::falcon512::sign_falcon512::sign_falcon512;
 use uuid::Uuid;
 
 use crate::{Error, jwt::jwt_claims::JWTClaims};

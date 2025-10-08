@@ -1,5 +1,5 @@
-use crypto::sign::key_pair::KeyPair;
 use log::info;
+use servo_crypto::sign::key_pair::KeyPair;
 use sqlx::{Pool, Postgres, types::Uuid};
 
 use crate::Error;

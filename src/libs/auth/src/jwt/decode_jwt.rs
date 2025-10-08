@@ -1,5 +1,5 @@
 use base64::{Engine, prelude::BASE64_URL_SAFE_NO_PAD};
-use crypto::sign::falcon512::validate_falcon512_sign::validate_falcon512_sign;
+use servo_crypto::sign::falcon512::validate_falcon512_sign::validate_falcon512_sign;
 
 use crate::{Error, jwt::jwt_claims::JWTClaims};
 
