@@ -1,5 +1,16 @@
-name = "give me a name vro"
+[config]
+gateway_name = "give me a name vro"
 listens = ["0.0.0.0:54321"]
+log_level = "info"
 
-[[upstream]]
-address = "somecontianer:33333"
+[[upstreams]]
+name = "test"
+downstream_addresses = ["someaddress.com"]
+
+[[upstreams.location]]
+endpoint = "/"
+proxy_pass = "http://192.168.1.103:8080"
+
+[[upstreams.location]]
+endpoint = "/test"
+proxy_pass = "http://192.168.1.103:8080"

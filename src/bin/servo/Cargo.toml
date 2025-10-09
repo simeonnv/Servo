@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+async-trait = "0.1.89"
 pingora = { version = "0.6.0", features = ["lb"] }
-
 servo_toml = { workspace = true }
+log = { workspace = true }
+env_logger = { workspace = true }

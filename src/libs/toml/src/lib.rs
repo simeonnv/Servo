@@ -10,4 +10,7 @@ pub use read_or_create_toml::read_or_create_toml;
 mod error;
 pub use error::Error;
 
+mod format_validate;
+pub use format_validate::FormatValidate;
+
 pub mod tomls;
