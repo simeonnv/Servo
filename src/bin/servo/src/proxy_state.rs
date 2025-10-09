@@ -22,9 +22,14 @@ impl ProxyHttp for ProxyState {
 
     async fn upstream_peer(
         &self,
-        _session: &mut Session,
+        session: &mut Session,
         _ctx: &mut Self::CTX,
     ) -> Result<Box<HttpPeer>> {
+        let addr = &session.req_header().uri;
+        let nz = &session.req_header().headers.get("host");
+        dbg!(addr);
+        dbg!(nz);
+
         // most of the logic will prolly be here
         let mut peer = HttpPeer::new(("10.0.0.1", 80), false, "".into());
         peer.options.connection_timeout = Some(Duration::from_millis(100));

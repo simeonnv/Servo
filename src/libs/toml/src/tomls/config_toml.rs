@@ -7,7 +7,7 @@ use crate::FormatValidate;
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ConfigToml {
     pub config: Config,
-    pub upstreams: Vec<Upstream>,
+    pub servers: Vec<Server>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -18,10 +18,10 @@ pub struct Config {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Upstream {
+pub struct Server {
     pub name: String,
     pub downstream_addresses: Vec<String>,
-    pub location: Vec<Location>,
+    pub locations: Vec<Location>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -42,24 +42,24 @@ impl FormatValidate for ConfigToml {
             _ => return Err("Invalid log level!".into()),
         }
 
-        let upstream_names: Vec<String> = self.upstreams.iter().map(|e| e.name.clone()).collect();
+        let upstream_names: Vec<String> = self.servers.iter().map(|e| e.name.clone()).collect();
         if has_duplicates(&upstream_names) {
-            return Err("2 or more upstreams have the same name!".into());
+            return Err("2 or more servers have the same name!".into());
         }
 
         let all_downstream_addresses: Vec<String> = self
-            .upstreams
+            .servers
             .iter()
             .flat_map(|upstream| upstream.downstream_addresses.clone())
             .collect();
         if has_duplicates(&all_downstream_addresses) {
-            return Err("Duplicate downstream addresses found across upstreams!".into());
+            return Err("Duplicate downstream addresses found across servers!".into());
         }
 
         let all_location_endpoint_patterns: Vec<String> = self
-            .upstreams
+            .servers
             .iter()
-            .flat_map(|upstream| upstream.location.clone())
+            .flat_map(|upstream| upstream.locations.clone())
             .map(|e| e.endpoint)
             .collect();
         if !all_location_endpoint_patterns
@@ -70,9 +70,9 @@ impl FormatValidate for ConfigToml {
         }
 
         // New check for duplicate endpoints within each upstream
-        for upstream in &self.upstreams {
+        for upstream in &self.servers {
             let endpoints: Vec<String> = upstream
-                .location
+                .locations
                 .iter()
                 .map(|loc| loc.endpoint.clone())
                 .collect();
@@ -90,10 +90,10 @@ impl FormatValidate for ConfigToml {
 
 impl Default for ConfigToml {
     fn default() -> Self {
-        let upstream_1 = Upstream {
+        let server_1 = Server {
             name: "test".into(),
             downstream_addresses: vec!["someaddress.com".into()],
-            location: vec![Location {
+            locations: vec![Location {
                 endpoint: "/".into(),
                 proxy_pass: "http://192.168.1.103:8080".into(),
             }],
@@ -107,7 +107,7 @@ impl Default for ConfigToml {
 
         Self {
             config,
-            upstreams: vec![upstream_1],
+            servers: vec![server_1],
         }
     }
 }

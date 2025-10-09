@@ -7,6 +7,9 @@ use crate::proxy_state::ProxyState;
 
 mod proxy_state;
 
+mod route_map;
+pub use route_map::RouteMap;
+
 fn main() -> Result<(), std::io::Error> {
     let config_toml = read_or_create_toml::<ConfigToml>("./config.toml")
         .unwrap_or_else(|err| panic!("config toml load err => {err}"));

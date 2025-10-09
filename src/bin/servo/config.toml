@@ -3,14 +3,14 @@ gateway_name = "give me a name vro"
 listens = ["0.0.0.0:54321"]
 log_level = "info"
 
-[[upstreams]]
+[[servers]]
 name = "test"
 downstream_addresses = ["someaddress.com"]
 
-[[upstreams.location]]
+[[servers.locations]]
 endpoint = "/"
 proxy_pass = "http://192.168.1.103:8080"
 
-[[upstreams.location]]
-endpoint = "/test"
+[[servers.locations]]
+endpoint = "/blehh"
 proxy_pass = "http://192.168.1.103:8080"
