@@ -7,8 +7,8 @@ use crate::proxy_state::ProxyState;
 
 mod proxy_state;
 
-mod route_map;
-pub use route_map::RouteMap;
+pub mod server_map;
+use server_map::ServerMap;
 
 fn main() -> Result<(), std::io::Error> {
     let config_toml = read_or_create_toml::<ConfigToml>("./config.toml")
@@ -20,12 +20,10 @@ fn main() -> Result<(), std::io::Error> {
         Server::new(None).unwrap_or_else(|err| panic!("Error loading server: {err}"));
     my_server.bootstrap();
 
-    let mut proxy = http_proxy_service(
-        &my_server.configuration,
-        ProxyState {
-            config: config_toml.clone(),
-        },
-    );
+    let server_map = ServerMap::build_from_config_toml(&config_toml);
+    dbg!(&server_map);
+
+    let mut proxy = http_proxy_service(&my_server.configuration, ProxyState { server_map });
 
     for addr in &config_toml.config.listens {
         proxy.add_tcp(addr);

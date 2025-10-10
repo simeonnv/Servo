@@ -5,7 +5,7 @@ log_level = "info"
 
 [[servers]]
 name = "test"
-downstream_addresses = ["someaddress.com"]
+downstream_hosts = ["0.0.0.0:54321"]
 
 [[servers.locations]]
 endpoint = "/"

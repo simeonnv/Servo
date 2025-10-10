@@ -6,28 +6,28 @@ use crate::FormatValidate;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ConfigToml {
-    pub config: Config,
-    pub servers: Vec<Server>,
+    pub config: GatewayConfigToml,
+    pub servers: Vec<ServerToml>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Config {
+pub struct GatewayConfigToml {
     pub gateway_name: String,
     pub listens: Vec<String>,
     pub log_level: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Server {
+pub struct ServerToml {
     pub name: String,
-    pub downstream_addresses: Vec<String>,
-    pub locations: Vec<Location>,
+    pub downstream_hosts: Vec<String>,
+    pub locations: Vec<LocationToml>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Location {
-    endpoint: String,
-    proxy_pass: String,
+pub struct LocationToml {
+    pub endpoint: String,
+    pub proxy_pass: String,
 }
 
 impl FormatValidate for ConfigToml {
@@ -47,13 +47,13 @@ impl FormatValidate for ConfigToml {
             return Err("2 or more servers have the same name!".into());
         }
 
-        let all_downstream_addresses: Vec<String> = self
+        let all_downstream_hosts: Vec<String> = self
             .servers
             .iter()
-            .flat_map(|upstream| upstream.downstream_addresses.clone())
+            .flat_map(|upstream| upstream.downstream_hosts.clone())
             .collect();
-        if has_duplicates(&all_downstream_addresses) {
-            return Err("Duplicate downstream addresses found across servers!".into());
+        if has_duplicates(&all_downstream_hosts) {
+            return Err("Duplicate downstream hosts found across servers!".into());
         }
 
         let all_location_endpoint_patterns: Vec<String> = self
@@ -90,16 +90,16 @@ impl FormatValidate for ConfigToml {
 
 impl Default for ConfigToml {
     fn default() -> Self {
-        let server_1 = Server {
+        let server_1 = ServerToml {
             name: "test".into(),
-            downstream_addresses: vec!["someaddress.com".into()],
-            locations: vec![Location {
+            downstream_hosts: vec!["someaddress.com".into()],
+            locations: vec![LocationToml {
                 endpoint: "/".into(),
                 proxy_pass: "http://192.168.1.103:8080".into(),
             }],
         };
 
-        let config = Config {
+        let config = GatewayConfigToml {
             gateway_name: "give me a name vro".into(),
             listens: vec!["0.0.0.0:54321".into()],
             log_level: "info".into(),
