@@ -8,9 +8,9 @@ name = "test"
 downstream_hosts = ["0.0.0.0:54321"]
 
 [[servers.locations]]
-endpoint = "/"
-proxy_pass = "http://192.168.1.103:8080"
+endpoints = ["/", "/{*any}"]
+proxy_pass = "0.0.0.0:25025"
 
-[[servers.locations]]
-endpoint = "/blehh"
-proxy_pass = "http://192.168.1.103:8080"
+# [[servers.locations]]
+# endpoints = ["/blehh", "/blehh/{*any}"]
+# proxy_pass = "0.0.0.0:8080"

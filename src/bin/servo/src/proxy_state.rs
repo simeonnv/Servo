@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use async_trait::async_trait;
+use log::{debug, info};
 use pingora::ErrorType::HTTPStatus;
 use pingora::{Error, Result};
 use pingora::{
@@ -16,6 +17,7 @@ pub struct ProxyState {
     pub server_map: ServerMap,
 }
 
+#[derive(Debug)]
 pub struct ProxyCTX {
     pub server: Option<Arc<Server>>,
     pub host_header: String,
@@ -45,25 +47,44 @@ impl ProxyHttp for ProxyState {
     async fn request_filter(&self, session: &mut Session, ctx: &mut Self::CTX) -> Result<bool> {
         // ctx.beta_user = check_beta_user(session.req_header());
         let req_header = session.req_header();
-        let host_header = req_header
-            .headers
-            .get("host")
-            .ok_or(Error::explain(HTTPStatus(400), "Missing host header"))?
-            .to_str()
-            .map_err(|err| Error::explain(HTTPStatus(400), format!("Invalid host header: {err}")))?
-            .to_owned();
-
         let endpoint = req_header.uri.path();
-        let server = self
-            .server_map
-            .routes
-            .get(&DownStreamHost(host_header.clone()))
-            .ok_or(Error::new(HTTPStatus(502)))?
-            .clone();
 
-        ctx.host_header = host_header;
+        let host_header = match req_header.headers.get("host") {
+            Some(e) => e,
+            None => {
+                info!("Request filtered: no host header");
+                return Ok(true);
+            }
+        };
+
+        let host_header = match host_header.to_str() {
+            Ok(e) => e,
+            Err(err) => {
+                info!("invalid charecters in header: {err}");
+                return Ok(true);
+            }
+        };
+
+        let server = match self.server_map.routes.get(host_header) {
+            Some(e) => e,
+            None => {
+                info!("unable to map the host header to a actual server!");
+                return Ok(true);
+            }
+        };
+
+        let proxy_pass = match server.routes.at(endpoint) {
+            Ok(e) => e,
+            Err(err) => {
+                info!("endpoint / path doesnt map to a upstream / proxy pass: {err}");
+                return Ok(true);
+            }
+        };
+
+        ctx.server = Some(server.clone());
+        ctx.host_header = host_header.to_owned();
+        ctx.proxy_pass = proxy_pass.value.0.clone();
         ctx.endpoint = endpoint.to_owned();
-        ctx.server = Some(server);
 
         Ok(false)
     }
@@ -71,10 +92,9 @@ impl ProxyHttp for ProxyState {
     async fn upstream_peer(
         &self,
         session: &mut Session,
-        _ctx: &mut Self::CTX,
+        ctx: &mut Self::CTX,
     ) -> Result<Box<HttpPeer>> {
-        // most of the logic will prolly be here
-        let mut peer = HttpPeer::new(("10.0.0.1", 80), false, "".into());
+        let mut peer = HttpPeer::new(&ctx.proxy_pass, false, "".into());
         peer.options.connection_timeout = Some(Duration::from_millis(100));
         Ok(Box::new(peer))
     }

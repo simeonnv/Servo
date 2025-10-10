@@ -26,13 +26,36 @@ pub struct ServerToml {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LocationToml {
-    pub endpoint: String,
+    pub endpoints: Vec<String>,
     pub proxy_pass: String,
+}
+
+impl Default for ConfigToml {
+    fn default() -> Self {
+        let server_1 = ServerToml {
+            name: "test".into(),
+            downstream_hosts: vec!["someaddress.com".into()],
+            locations: vec![LocationToml {
+                endpoints: vec!["/".into(), "/{*any}".into()], // Changed from endpoint to endpoints
+                proxy_pass: "http://192.168.1.103:8080".into(),
+            }],
+        };
+
+        let config = GatewayConfigToml {
+            gateway_name: "give me a name vro".into(),
+            listens: vec!["0.0.0.0:54321".into()],
+            log_level: "info".into(),
+        };
+
+        Self {
+            config,
+            servers: vec![server_1],
+        }
+    }
 }
 
 impl FormatValidate for ConfigToml {
     fn validate(&self) -> Result<(), String> {
-        // Existing checks
         if has_duplicates(&self.config.listens) {
             return Err("Duplicate proxy listen addresses!".into());
         }
@@ -59,8 +82,9 @@ impl FormatValidate for ConfigToml {
         let all_location_endpoint_patterns: Vec<String> = self
             .servers
             .iter()
-            .flat_map(|upstream| upstream.locations.clone())
-            .map(|e| e.endpoint)
+            .flat_map(|upstream| upstream.locations.iter())
+            .flat_map(|location| location.endpoints.iter())
+            .cloned()
             .collect();
         if !all_location_endpoint_patterns
             .iter()
@@ -69,12 +93,12 @@ impl FormatValidate for ConfigToml {
             return Err("Not all endpoint patterns start with '/'!".into());
         }
 
-        // New check for duplicate endpoints within each upstream
         for upstream in &self.servers {
             let endpoints: Vec<String> = upstream
                 .locations
                 .iter()
-                .map(|loc| loc.endpoint.clone())
+                .flat_map(|loc| loc.endpoints.iter())
+                .cloned()
                 .collect();
             if has_duplicates(&endpoints) {
                 return Err(format!(
@@ -85,30 +109,6 @@ impl FormatValidate for ConfigToml {
         }
 
         Ok(())
-    }
-}
-
-impl Default for ConfigToml {
-    fn default() -> Self {
-        let server_1 = ServerToml {
-            name: "test".into(),
-            downstream_hosts: vec!["someaddress.com".into()],
-            locations: vec![LocationToml {
-                endpoint: "/".into(),
-                proxy_pass: "http://192.168.1.103:8080".into(),
-            }],
-        };
-
-        let config = GatewayConfigToml {
-            gateway_name: "give me a name vro".into(),
-            listens: vec!["0.0.0.0:54321".into()],
-            log_level: "info".into(),
-        };
-
-        Self {
-            config,
-            servers: vec![server_1],
-        }
     }
 }
 

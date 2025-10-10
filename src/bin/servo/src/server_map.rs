@@ -1,4 +1,4 @@
-use std::{rc::Rc, sync::Arc};
+use std::{borrow::Borrow, sync::Arc};
 
 use dashmap::DashMap;
 use matchit::Router;
@@ -13,6 +13,12 @@ pub struct ServerMap {
 
 #[derive(PartialEq, Eq, Hash, Debug)]
 pub struct DownStreamHost(pub String);
+
+impl Borrow<str> for DownStreamHost {
+    fn borrow(&self) -> &str {
+        &self.0
+    }
+}
 
 #[derive(Debug)]
 pub struct Server {
@@ -30,12 +36,11 @@ impl ServerMap {
         for server_toml in &config.servers {
             let mut router = Router::new();
             for location_toml in &server_toml.locations {
-                router
-                    .insert(
-                        location_toml.endpoint.clone(),
-                        ProxyPass(location_toml.proxy_pass.clone()),
-                    )
-                    .expect("invalid location endpoint!");
+                for endpoint in location_toml.endpoints.clone() {
+                    router
+                        .insert(endpoint, ProxyPass(location_toml.proxy_pass.clone()))
+                        .expect("invalid location endpoint!");
+                }
             }
             let router = router;
             let server = Arc::new(Server {
