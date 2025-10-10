@@ -1,39 +1,19 @@
-use std::sync::Arc;
 use std::time::Duration;
 
 use async_trait::async_trait;
-use log::{debug, info};
+use log::{error, info};
 use pingora::ErrorType::HTTPStatus;
 use pingora::{Error, Result};
 use pingora::{
     prelude::HttpPeer,
     proxy::{ProxyHttp, Session},
 };
-use servo_toml::tomls::ConfigToml;
 
-use crate::server_map::{DownStreamHost, Server, ServerMap};
+use crate::proxy_ctx::ProxyCTX;
+use crate::server_map::ServerMap;
 
 pub struct ProxyState {
     pub server_map: ServerMap,
-}
-
-#[derive(Debug)]
-pub struct ProxyCTX {
-    pub server: Option<Arc<Server>>,
-    pub host_header: String,
-    pub endpoint: String,
-    pub proxy_pass: String,
-}
-
-impl Default for ProxyCTX {
-    fn default() -> Self {
-        Self {
-            server: None,
-            host_header: "".into(),
-            endpoint: "".into(),
-            proxy_pass: "".into(),
-        }
-    }
 }
 
 #[async_trait]
@@ -73,7 +53,7 @@ impl ProxyHttp for ProxyState {
             }
         };
 
-        let proxy_pass = match server.routes.at(endpoint) {
+        let proxy_passes = match server.routes.at(endpoint) {
             Ok(e) => e,
             Err(err) => {
                 info!("endpoint / path doesnt map to a upstream / proxy pass: {err}");
@@ -83,7 +63,7 @@ impl ProxyHttp for ProxyState {
 
         ctx.server = Some(server.clone());
         ctx.host_header = host_header.to_owned();
-        ctx.proxy_pass = proxy_pass.value.0.clone();
+        ctx.proxy_passes = Some(proxy_passes.value.to_owned());
         ctx.endpoint = endpoint.to_owned();
 
         Ok(false)
@@ -91,10 +71,21 @@ impl ProxyHttp for ProxyState {
 
     async fn upstream_peer(
         &self,
-        session: &mut Session,
+        _session: &mut Session,
         ctx: &mut Self::CTX,
     ) -> Result<Box<HttpPeer>> {
-        let mut peer = HttpPeer::new(&ctx.proxy_pass, false, "".into());
+        let proxy_pass = ctx
+            .proxy_passes
+            .as_ref()
+            .unwrap()
+            .load_balancer
+            .select(b"", 256)
+            .ok_or_else(|| {
+                error!("falied to select proxypass / backend / upstream");
+                Error::explain(HTTPStatus(500), "Server is unavailable")
+            })?;
+
+        let mut peer = HttpPeer::new(&proxy_pass, false, "".into());
         peer.options.connection_timeout = Some(Duration::from_millis(100));
         Ok(Box::new(peer))
     }

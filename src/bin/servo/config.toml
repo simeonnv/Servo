@@ -5,11 +5,12 @@ log_level = "info"
 
 [[servers]]
 name = "test"
-downstream_hosts = ["0.0.0.0:54321"]
+downstream_hosts = ["0.0.0.0:54321", "127.0.0.1:54321"]
 
 [[servers.locations]]
 endpoints = ["/", "/{*any}"]
-proxy_pass = "0.0.0.0:25025"
+proxy_passes = ["0.0.0.0:25025"]
+# health_check = true
 
 # [[servers.locations]]
 # endpoints = ["/blehh", "/blehh/{*any}"]

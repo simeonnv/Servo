@@ -7,6 +7,8 @@ use crate::proxy_state::ProxyState;
 
 mod proxy_state;
 
+pub mod proxy_ctx;
+
 pub mod server_map;
 use server_map::ServerMap;
 
