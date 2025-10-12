@@ -1,0 +1,14 @@
+[package]
+name = "servo_types"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+url = { workspace = true }
+http = { workspace = true }
+pingora-http = "0.6.0"
+thiserror = { workspace = true }
+pingora-load-balancing = "0.6.0"
+servo_toml = { workspace = true }
+pingora-core = "0.6.0"
+matchit = { workspace = true }

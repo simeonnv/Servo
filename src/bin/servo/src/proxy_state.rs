@@ -8,10 +8,10 @@ use pingora::{
     prelude::HttpPeer,
     proxy::{ProxyHttp, Session},
 };
-use url::Host;
+use servo_types::DownStreamHost;
 
 use crate::proxy_ctx::ProxyCTX;
-use crate::server_map::{DownStreamHost, ServerMap};
+use crate::server_map::ServerMap;
 
 pub struct ProxyState {
     pub server_map: ServerMap,
@@ -30,32 +30,15 @@ impl ProxyHttp for ProxyState {
         let req_header = session.req_header();
         let endpoint = req_header.uri.path();
 
-        let host_header = match req_header.headers.get("host") {
-            Some(e) => e,
-            None => {
-                info!("Request filtered: no host header");
-                return Ok(true);
-            }
-        };
-        let host_header = match host_header.to_str() {
+        let host_header = match DownStreamHost::try_from(req_header) {
             Ok(e) => e,
             Err(err) => {
-                info!("invalid charecters in header: {err}");
+                info!("unable to parse DownStreamHost => {err}");
                 return Ok(true);
             }
         };
 
-        let host_header = match Host::parse(host_header) {
-            Ok(e) => e,
-            Err(err) => {
-                info!("unable to parse Host: {err}");
-                return Ok(true);
-            }
-        };
-
-        let host = DownStreamHost(host_header.clone());
-
-        let server = match self.server_map.routes.get(&host) {
+        let server = match self.server_map.routes.get(&host_header) {
             Some(e) => e,
             None => {
                 info!("unable to map the host header to a actual server!");

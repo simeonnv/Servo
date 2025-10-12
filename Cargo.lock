@@ -2454,10 +2454,12 @@ dependencies = [
  "async-trait",
  "dashmap",
  "env_logger",
+ "http",
  "log",
  "matchit",
  "pingora",
  "servo_toml",
+ "servo_types",
  "url",
 ]
 
@@ -2500,6 +2502,20 @@ dependencies = [
  "serde",
  "thiserror 2.0.17",
  "toml",
+ "url",
+]
+
+[[package]]
+name = "servo_types"
+version = "0.1.0"
+dependencies = [
+ "http",
+ "matchit",
+ "pingora-core",
+ "pingora-http",
+ "pingora-load-balancing",
+ "servo_toml",
+ "thiserror 2.0.17",
  "url",
 ]
 

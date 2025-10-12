@@ -1,7 +1,7 @@
 use env_logger::Env;
 use log::info;
 use pingora::{proxy::http_proxy_service, server::Server};
-use servo_toml::{read_or_create_toml, tomls::ConfigToml};
+use servo_toml::{read_or_create_toml, tomls::config_toml::ConfigToml};
 
 use crate::proxy_state::ProxyState;
 

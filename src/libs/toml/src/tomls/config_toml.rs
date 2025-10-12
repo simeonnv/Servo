@@ -2,7 +2,6 @@ use std::{collections::HashSet, net::SocketAddr};
 
 use log::Level;
 use serde::{Deserialize, Serialize};
-use url::Host;
 
 use crate::FormatValidate;
 
@@ -22,7 +21,7 @@ pub struct GatewayConfigToml {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ServerToml {
     pub name: String,
-    pub downstream_hosts: Vec<Host>,
+    pub downstream_hosts: Vec<String>,
     pub locations: Vec<LocationToml>,
 }
 
@@ -38,7 +37,7 @@ impl Default for ConfigToml {
     fn default() -> Self {
         let server_1 = ServerToml {
             name: "test".into(),
-            downstream_hosts: vec![Host::parse("someaddress.com").unwrap()],
+            downstream_hosts: vec!["someaddress.com".into(), "0.0.0.0:54321".into()],
             locations: vec![LocationToml {
                 endpoints: vec!["/".into(), "/{*any}".into()], // Changed from endpoint to endpoints
                 health_check: Some(true),
@@ -66,17 +65,12 @@ impl FormatValidate for ConfigToml {
             return Err("Duplicate proxy listen addresses!".into());
         }
 
-        // match self.config.log_level.as_str() {
-        //     "debug" | "info" | "warn" | "error" | "fatal" => {}
-        //     _ => return Err("Invalid log level!".into()),
-        // }
-
         let upstream_names: Vec<String> = self.servers.iter().map(|e| e.name.clone()).collect();
         if has_duplicates(&upstream_names) {
             return Err("2 or more servers have the same name!".into());
         }
 
-        let all_downstream_hosts: Vec<Host> = self
+        let all_downstream_hosts: Vec<String> = self
             .servers
             .iter()
             .flat_map(|upstream| upstream.downstream_hosts.clone())

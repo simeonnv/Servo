@@ -10,5 +10,7 @@ servo_toml = { workspace = true }
 log = { workspace = true }
 env_logger = { workspace = true }
 dashmap.workspace = true
-matchit = "0.8.6"
 url = { workspace = true }
+http = { workspace = true }
+servo_types = { workspace = true }
+matchit = { workspace = true }
