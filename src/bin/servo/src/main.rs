@@ -15,8 +15,10 @@ use server_map::ServerMap;
 fn main() -> Result<(), std::io::Error> {
     let config_toml = read_or_create_toml::<ConfigToml>("./config.toml")
         .unwrap_or_else(|err| panic!("config toml load err => {err}"));
-    env_logger::Builder::from_env(Env::default().default_filter_or(&config_toml.config.log_level))
-        .init();
+    env_logger::Builder::from_env(
+        Env::default().default_filter_or(config_toml.config.log_level.as_str()),
+    )
+    .init();
 
     let mut my_server =
         Server::new(None).unwrap_or_else(|err| panic!("Error loading server: {err}"));
@@ -28,7 +30,7 @@ fn main() -> Result<(), std::io::Error> {
     let mut proxy = http_proxy_service(&my_server.configuration, ProxyState { server_map });
 
     for addr in &config_toml.config.listens {
-        proxy.add_tcp(addr);
+        proxy.add_tcp(&addr.to_string());
         info!("Server binded on: {addr}")
     }
 

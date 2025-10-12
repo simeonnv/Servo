@@ -1,6 +1,8 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, net::SocketAddr};
 
+use log::Level;
 use serde::{Deserialize, Serialize};
+use url::Host;
 
 use crate::FormatValidate;
 
@@ -13,21 +15,21 @@ pub struct ConfigToml {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GatewayConfigToml {
     pub gateway_name: String,
-    pub listens: Vec<String>,
-    pub log_level: String,
+    pub listens: Vec<SocketAddr>,
+    pub log_level: Level,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ServerToml {
     pub name: String,
-    pub downstream_hosts: Vec<String>,
+    pub downstream_hosts: Vec<Host>,
     pub locations: Vec<LocationToml>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LocationToml {
     pub endpoints: Vec<String>,
-    pub proxy_passes: Vec<String>,
+    pub proxy_passes: Vec<SocketAddr>,
     pub health_check: Option<bool>,
     pub health_check_frequency: Option<u64>,
 }
@@ -36,19 +38,19 @@ impl Default for ConfigToml {
     fn default() -> Self {
         let server_1 = ServerToml {
             name: "test".into(),
-            downstream_hosts: vec!["someaddress.com".into()],
+            downstream_hosts: vec![Host::parse("someaddress.com").unwrap()],
             locations: vec![LocationToml {
                 endpoints: vec!["/".into(), "/{*any}".into()], // Changed from endpoint to endpoints
                 health_check: Some(true),
                 health_check_frequency: Some(3000),
-                proxy_passes: vec!["http://192.168.1.103:8080".into()],
+                proxy_passes: vec!["192.168.1.103:8080".parse().unwrap()],
             }],
         };
 
         let config = GatewayConfigToml {
             gateway_name: "give me a name vro".into(),
-            listens: vec!["0.0.0.0:54321".into()],
-            log_level: "info".into(),
+            listens: vec!["0.0.0.0:54321".parse().unwrap()],
+            log_level: Level::Info,
         };
 
         Self {
@@ -64,17 +66,17 @@ impl FormatValidate for ConfigToml {
             return Err("Duplicate proxy listen addresses!".into());
         }
 
-        match self.config.log_level.as_str() {
-            "debug" | "info" | "warn" | "error" | "fatal" => {}
-            _ => return Err("Invalid log level!".into()),
-        }
+        // match self.config.log_level.as_str() {
+        //     "debug" | "info" | "warn" | "error" | "fatal" => {}
+        //     _ => return Err("Invalid log level!".into()),
+        // }
 
         let upstream_names: Vec<String> = self.servers.iter().map(|e| e.name.clone()).collect();
         if has_duplicates(&upstream_names) {
             return Err("2 or more servers have the same name!".into());
         }
 
-        let all_downstream_hosts: Vec<String> = self
+        let all_downstream_hosts: Vec<Host> = self
             .servers
             .iter()
             .flat_map(|upstream| upstream.downstream_hosts.clone())

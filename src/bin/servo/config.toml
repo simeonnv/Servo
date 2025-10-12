@@ -1,17 +1,16 @@
 [config]
 gateway_name = "give me a name vro"
 listens = ["0.0.0.0:54321"]
-log_level = "info"
+log_level = "INFO"
 
 [[servers]]
 name = "test"
-downstream_hosts = ["0.0.0.0:54321", "127.0.0.1:54321"]
+
+[[servers.downstream_hosts]]
+Domain = "someaddress.com"
 
 [[servers.locations]]
 endpoints = ["/", "/{*any}"]
-proxy_passes = ["0.0.0.0:25025"]
-# health_check = true
-
-# [[servers.locations]]
-# endpoints = ["/blehh", "/blehh/{*any}"]
-# proxy_pass = "0.0.0.0:8080"
+proxy_passes = ["192.168.1.103:8080"]
+health_check = true
+health_check_frequency = 3000

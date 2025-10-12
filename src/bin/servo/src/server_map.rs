@@ -1,4 +1,5 @@
 use core::fmt;
+use std::net::SocketAddr;
 use std::time::Duration;
 use std::{borrow::Borrow, sync::Arc};
 
@@ -7,6 +8,7 @@ use matchit::Router;
 use pingora::lb::LoadBalancer;
 use pingora::prelude::{RoundRobin, TcpHealthCheck, background_service};
 use servo_toml::tomls::ConfigToml;
+use url::Host;
 
 #[derive(Debug)]
 pub struct ServerMap {
@@ -16,13 +18,7 @@ pub struct ServerMap {
 }
 
 #[derive(PartialEq, Eq, Hash, Debug)]
-pub struct DownStreamHost(pub String);
-
-impl Borrow<str> for DownStreamHost {
-    fn borrow(&self) -> &str {
-        &self.0
-    }
-}
+pub struct DownStreamHost(pub Host);
 
 #[derive(Debug)]
 pub struct Server {
@@ -32,7 +28,7 @@ pub struct Server {
 
 #[derive(Clone)]
 pub struct ProxyPasses {
-    pub proxy_passes: Vec<String>,
+    pub proxy_passes: Vec<SocketAddr>,
     pub load_balancer: Arc<LoadBalancer<RoundRobin>>,
 }
 

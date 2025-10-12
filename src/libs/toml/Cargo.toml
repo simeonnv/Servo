@@ -8,3 +8,4 @@ log = { workspace = true }
 thiserror = { workspace = true }
 serde = { workspace = true }
 toml = "0.9.7"
+url = { workspace = true }

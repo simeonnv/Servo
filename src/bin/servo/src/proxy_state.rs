@@ -8,9 +8,10 @@ use pingora::{
     prelude::HttpPeer,
     proxy::{ProxyHttp, Session},
 };
+use url::Host;
 
 use crate::proxy_ctx::ProxyCTX;
-use crate::server_map::ServerMap;
+use crate::server_map::{DownStreamHost, ServerMap};
 
 pub struct ProxyState {
     pub server_map: ServerMap,
@@ -36,7 +37,6 @@ impl ProxyHttp for ProxyState {
                 return Ok(true);
             }
         };
-
         let host_header = match host_header.to_str() {
             Ok(e) => e,
             Err(err) => {
@@ -45,7 +45,17 @@ impl ProxyHttp for ProxyState {
             }
         };
 
-        let server = match self.server_map.routes.get(host_header) {
+        let host_header = match Host::parse(host_header) {
+            Ok(e) => e,
+            Err(err) => {
+                info!("unable to parse Host: {err}");
+                return Ok(true);
+            }
+        };
+
+        let host = DownStreamHost(host_header.clone());
+
+        let server = match self.server_map.routes.get(&host) {
             Some(e) => e,
             None => {
                 info!("unable to map the host header to a actual server!");
@@ -62,7 +72,7 @@ impl ProxyHttp for ProxyState {
         };
 
         ctx.server = Some(server.clone());
-        ctx.host_header = host_header.to_owned();
+        ctx.host_header = Some(host_header);
         ctx.proxy_passes = Some(proxy_passes.value.to_owned());
         ctx.endpoint = endpoint.to_owned();
 
