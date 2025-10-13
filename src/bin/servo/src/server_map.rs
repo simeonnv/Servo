@@ -8,7 +8,7 @@ use servo_types::{DownStreamHost, Server};
 pub struct ServerMap {
     // a router hashmap that contains the key: downstream host
     // and val: endpoint router with the proxy pass for that downstream
-    pub routes: DashMap<DownStreamHost<'static>, Arc<Server>>,
+    pub routes: DashMap<DownStreamHost, Arc<Server>>,
 }
 
 // peak code

@@ -21,7 +21,7 @@ impl Default for ProxyCTX {
 #[derive(Debug)]
 pub struct AfterFilterCTX {
     pub server: Arc<Server>,
-    pub host_header: DownStreamHost<'static>,
+    pub host_header: DownStreamHost,
     pub endpoint: String,
     pub proxy_passes: ProxyPass,
 }

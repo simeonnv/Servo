@@ -31,7 +31,7 @@ impl ProxyHttp for ProxyState {
         let endpoint = req_header.uri.path();
 
         let host_header = match DownStreamHost::try_from(req_header) {
-            Ok(e) => e.into_owned_host(),
+            Ok(e) => e,
             Err(err) => {
                 info!("unable to parse DownStreamHost => {err}");
                 return Ok(true);
