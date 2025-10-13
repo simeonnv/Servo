@@ -8,7 +8,7 @@ use servo_types::{DownStreamHost, Server};
 pub struct ServerMap {
     // a router hashmap that contains the key: downstream host
     // and val: endpoint router with the proxy pass for that downstream
-    pub routes: DashMap<DownStreamHost, Arc<Server>>,
+    pub routes: DashMap<DownStreamHost<'static>, Arc<Server>>,
 }
 
 // peak code
@@ -25,7 +25,7 @@ impl ServerMap {
             };
             for downstream_host_toml in &server_toml.downstream_hosts {
                 routes.insert(
-                    DownStreamHost::from(downstream_host_toml.as_str()),
+                    DownStreamHost::from(downstream_host_toml.to_owned()),
                     server.clone(),
                 );
             }

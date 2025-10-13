@@ -10,7 +10,7 @@ use pingora::{
 };
 use servo_types::DownStreamHost;
 
-use crate::proxy_ctx::ProxyCTX;
+use crate::proxy_ctx::{AfterFilterCTX, ProxyCTX};
 use crate::server_map::ServerMap;
 
 pub struct ProxyState {
@@ -31,7 +31,7 @@ impl ProxyHttp for ProxyState {
         let endpoint = req_header.uri.path();
 
         let host_header = match DownStreamHost::try_from(req_header) {
-            Ok(e) => e,
+            Ok(e) => e.into_owned_host(),
             Err(err) => {
                 info!("unable to parse DownStreamHost => {err}");
                 return Ok(true);
@@ -54,10 +54,14 @@ impl ProxyHttp for ProxyState {
             }
         };
 
-        ctx.server = Some(server.clone());
-        ctx.host_header = Some(host_header);
-        ctx.proxy_passes = Some(proxy_passes.value.to_owned());
-        ctx.endpoint = endpoint.to_owned();
+        let after_filter_ctx = AfterFilterCTX {
+            server: server.clone(),
+            endpoint: endpoint.to_owned(),
+            host_header: host_header,
+            proxy_passes: proxy_passes.value.to_owned(),
+        };
+
+        ctx.after_filter = Some(after_filter_ctx);
 
         Ok(false)
     }
@@ -67,10 +71,10 @@ impl ProxyHttp for ProxyState {
         _session: &mut Session,
         ctx: &mut Self::CTX,
     ) -> Result<Box<HttpPeer>> {
-        let proxy_pass = ctx
+        let after_filter_ctx = ctx.after_filter.as_ref().unwrap();
+
+        let proxy_pass = after_filter_ctx
             .proxy_passes
-            .as_ref()
-            .unwrap()
             .load_balancer
             .select(b"", 256)
             .ok_or_else(|| {

@@ -3,19 +3,25 @@ use std::sync::Arc;
 
 #[derive(Debug)]
 pub struct ProxyCTX {
-    pub server: Option<Arc<Server>>,
-    pub host_header: Option<DownStreamHost>,
-    pub endpoint: String,
-    pub proxy_passes: Option<ProxyPass>,
+    pub after_filter: Option<AfterFilterCTX>,
+}
+
+impl ProxyCTX {
+    pub fn new() -> Self {
+        Self { after_filter: None }
+    }
 }
 
 impl Default for ProxyCTX {
     fn default() -> Self {
-        Self {
-            server: None,
-            host_header: None,
-            endpoint: "".into(),
-            proxy_passes: None,
-        }
+        Self::new()
     }
+}
+
+#[derive(Debug)]
+pub struct AfterFilterCTX {
+    pub server: Arc<Server>,
+    pub host_header: DownStreamHost<'static>,
+    pub endpoint: String,
+    pub proxy_passes: ProxyPass,
 }
