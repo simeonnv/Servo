@@ -9,8 +9,11 @@ pingora = { version = "0.6.0", features = ["lb"] }
 servo_toml = { workspace = true }
 log = { workspace = true }
 env_logger = { workspace = true }
-dashmap.workspace = true
+dashmap = { workspace = true }
+serde = { workspace = true }
 url = { workspace = true }
 http = { workspace = true }
-servo_types = { workspace = true }
 matchit = { workspace = true }
+tokio = { workspace = true }
+thiserror = { workspace = true }
+reqwest = "0.12.24"

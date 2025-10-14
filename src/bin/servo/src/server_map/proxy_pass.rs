@@ -1,13 +1,12 @@
 use core::fmt;
-use pingora_core::prelude::background_service;
-use pingora_load_balancing::{
-    LoadBalancer,
-    prelude::{RoundRobin, TcpHealthCheck},
+use pingora::{
+    lb::LoadBalancer,
+    prelude::{RoundRobin, TcpHealthCheck, background_service},
 };
 use std::{net::SocketAddr, sync::Arc, time::Duration};
 use thiserror::Error;
 
-use servo_toml::tomls::config_toml::LocationToml;
+use crate::config_toml::LocationToml;
 
 #[derive(Clone)]
 pub struct ProxyPass {

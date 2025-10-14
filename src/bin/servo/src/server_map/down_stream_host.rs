@@ -1,6 +1,6 @@
 use std::borrow::Borrow;
 
-use pingora_http::RequestHeader;
+use pingora::http::RequestHeader;
 use thiserror::Error;
 
 #[derive(PartialEq, Eq, Hash, Debug)]

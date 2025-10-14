@@ -1,7 +1,9 @@
-use crate::Error;
 use std::{borrow::Borrow, fs, path::PathBuf, sync::Arc};
 use url::Url;
 
+use crate::public_pem::Error;
+
+#[derive(Debug)]
 pub struct PublicPem(Arc<[u8]>);
 
 impl PublicPem {
@@ -13,7 +15,7 @@ impl PublicPem {
         Ok(Self(pub_pem))
     }
 
-    pub async fn from_path(path: PathBuf) -> Result<Self, Error> {
+    pub fn from_path(path: &PathBuf) -> Result<Self, Error> {
         let file =
             fs::read(path).map_err(|err| Error::FailedToReadPublicPemFromFS(err.to_string()))?;
         let pub_pem: Arc<[u8]> = Arc::from(file.into_boxed_slice());

@@ -1,8 +1,11 @@
 use std::sync::Arc;
 
 use dashmap::DashMap;
-use servo_toml::tomls::config_toml::ConfigToml;
-use servo_types::{DownStreamHost, Server};
+
+use crate::{
+    ConfigToml,
+    server_map::{DownStreamHost, Server},
+};
 
 #[derive(Debug)]
 pub struct ServerMap {
@@ -13,16 +16,17 @@ pub struct ServerMap {
 
 // peak code
 impl ServerMap {
-    pub fn build_from_config_toml(config: &ConfigToml) -> Self {
+    pub async fn build_from_config_toml(config: &ConfigToml) -> Self {
         let routes = DashMap::new();
         for server_toml in &config.servers {
-            let server = match Server::try_from(server_toml) {
+            let server = match Server::from_server_toml(server_toml).await {
                 Ok(server) => Arc::new(server),
                 Err(e) => {
                     eprintln!("Failed to create server from config: {}", e);
                     continue;
                 }
             };
+
             for downstream_host_toml in &server_toml.downstream_hosts {
                 routes.insert(
                     DownStreamHost::from(downstream_host_toml.to_owned()),

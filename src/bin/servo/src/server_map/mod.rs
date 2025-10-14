@@ -6,3 +6,6 @@ pub use proxy_pass::ProxyPass;
 
 mod server;
 pub use server::Server;
+
+pub mod server_map;
+pub use server_map::ServerMap;

@@ -1,5 +1,6 @@
-use servo_types::{DownStreamHost, ProxyPass, Server};
 use std::sync::Arc;
+
+use crate::server_map::{DownStreamHost, ProxyPass, Server};
 
 #[derive(Debug)]
 pub struct ProxyCTX {

@@ -1,7 +1,8 @@
 use env_logger::Env;
 use log::info;
 use pingora::{proxy::http_proxy_service, server::Server};
-use servo_toml::{read_or_create_toml, tomls::config_toml::ConfigToml};
+use servo_toml::read_or_create_toml;
+use tokio::runtime::Runtime;
 
 use crate::proxy_state::ProxyState;
 
@@ -12,6 +13,12 @@ pub mod proxy_ctx;
 pub mod server_map;
 use server_map::ServerMap;
 
+mod config_toml;
+pub use config_toml::ConfigToml;
+
+pub mod public_pem;
+
+// #[tokio::main]
 fn main() -> Result<(), std::io::Error> {
     let config_toml = read_or_create_toml::<ConfigToml>("./config.toml")
         .unwrap_or_else(|err| panic!("config toml load err => {err}"));
@@ -24,7 +31,8 @@ fn main() -> Result<(), std::io::Error> {
         Server::new(None).unwrap_or_else(|err| panic!("Error loading server: {err}"));
     my_server.bootstrap();
 
-    let server_map = ServerMap::build_from_config_toml(&config_toml);
+    let rt = Runtime::new().unwrap();
+    let server_map = rt.block_on(ServerMap::build_from_config_toml(&config_toml));
     let mut proxy = http_proxy_service(&my_server.configuration, ProxyState { server_map });
 
     for addr in &config_toml.config.listens {

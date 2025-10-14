@@ -8,10 +8,9 @@ use pingora::{
     prelude::HttpPeer,
     proxy::{ProxyHttp, Session},
 };
-use servo_types::DownStreamHost;
 
 use crate::proxy_ctx::{AfterFilterCTX, ProxyCTX};
-use crate::server_map::ServerMap;
+use crate::server_map::{DownStreamHost, ServerMap};
 
 pub struct ProxyState {
     pub server_map: ServerMap,

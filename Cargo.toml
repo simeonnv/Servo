@@ -1,19 +1,11 @@
 [workspace]
-members = [
-    "src/bin/servo",
-    "src/libs/auth",
-    "src/libs/crypto",
-    "src/libs/public_pem_sync",
-    "src/libs/toml",
-    "src/libs/types",
-]
+members = ["src/bin/servo", "src/libs/auth", "src/libs/crypto", "src/libs/toml"]
 
 
 [workspace.dependencies]
 servo_crypto = { path = "src/libs/crypto" }
 servo_auth = { path = "src/libs/auth" }
 servo_toml = { path = "src/libs/toml" }
-servo_types = { path = "src/libs/types" }
 
 # async and par
 tokio = { version = "1.47.1", features = ["sync"] }

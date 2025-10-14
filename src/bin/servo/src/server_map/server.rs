@@ -1,20 +1,18 @@
 use matchit::Router;
-use servo_toml::tomls::config_toml::ServerToml;
 use thiserror::Error;
 
-use crate::ProxyPass;
-use crate::proxy_pass::Error as ProxyPassError;
+use crate::server_map::proxy_pass::Error as ProxyPassError;
+use crate::{config_toml::ServerToml, public_pem::PublicPemSync, server_map::ProxyPass};
 
 #[derive(Debug)]
 pub struct Server {
     pub name: String,
     pub routes: Router<ProxyPass>,
+    pub public_key_sync: Option<PublicPemSync>,
 }
 
-impl TryFrom<&ServerToml> for Server {
-    type Error = Error;
-
-    fn try_from(server_toml: &ServerToml) -> Result<Self, Error> {
+impl Server {
+    pub async fn from_server_toml(server_toml: &ServerToml) -> Result<Self, Error> {
         let mut router = Router::new();
         for location_toml in &server_toml.locations {
             for endpoint in location_toml.endpoints.clone() {
@@ -25,8 +23,22 @@ impl TryFrom<&ServerToml> for Server {
             }
         }
         let router = router;
+
+        let public_key_sync = if let Some(auth_toml) = &server_toml.auth {
+            Some(
+                PublicPemSync::init_auth_toml(auth_toml)
+                    .await
+                    .unwrap_or_else(|err| {
+                        panic!("Failed to build public pem synchronizer => {err}");
+                    }),
+            )
+        } else {
+            None
+        };
+
         let server = Server {
             name: server_toml.name.clone(),
+            public_key_sync,
             routes: router,
         };
 
