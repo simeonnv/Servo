@@ -1,0 +1,13 @@
+[package]
+name = "public_pem_sync"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+chrono = { workspace = true }
+servo_toml = { workspace = true }
+url = { workspace = true }
+reqwest = "0.12.24"
+thiserror = { workspace = true }
+tokio = { workspace = true }
+log = { workspace = true }

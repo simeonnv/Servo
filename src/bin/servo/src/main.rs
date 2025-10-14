@@ -25,8 +25,6 @@ fn main() -> Result<(), std::io::Error> {
     my_server.bootstrap();
 
     let server_map = ServerMap::build_from_config_toml(&config_toml);
-    dbg!(&server_map);
-
     let mut proxy = http_proxy_service(&my_server.configuration, ProxyState { server_map });
 
     for addr in &config_toml.config.listens {

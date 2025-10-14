@@ -1,7 +1,8 @@
-use std::{collections::HashSet, net::SocketAddr};
+use std::{collections::HashSet, net::SocketAddr, path::PathBuf};
 
 use log::Level;
 use serde::{Deserialize, Serialize};
+use url::Url;
 
 use crate::FormatValidate;
 
@@ -29,8 +30,23 @@ pub struct ServerToml {
 pub struct LocationToml {
     pub endpoints: Vec<String>,
     pub proxy_passes: Vec<SocketAddr>,
+    pub auth: Option<AuthToml>,
     pub health_check: Option<bool>,
     pub health_check_frequency: Option<u64>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AuthToml {
+    #[serde(flatten)]
+    pub public_pem_location: PublicPemLocation,
+    pub update_duration: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "snake_case")]
+pub enum PublicPemLocation {
+    PublicPemHttpUrl(Url),
+    PublicPemPath(PathBuf),
 }
 
 impl Default for ConfigToml {
@@ -41,6 +57,12 @@ impl Default for ConfigToml {
             locations: vec![LocationToml {
                 endpoints: vec!["/".into(), "/{*any}".into()], // Changed from endpoint to endpoints
                 health_check: Some(true),
+                auth: Some(AuthToml {
+                    public_pem_location: PublicPemLocation::PublicPemHttpUrl(
+                        Url::parse("http://0.0.0.0:25025/public_pem").unwrap(),
+                    ),
+                    update_duration: 10_000,
+                }),
                 health_check_frequency: Some(3000),
                 proxy_passes: vec!["192.168.1.103:8080".parse().unwrap()],
             }],
