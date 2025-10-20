@@ -1,0 +1,10 @@
+[package]
+name = "key_pair_roller"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+servo_crypto = { workspace = true, features = ["rsa"] }
+tokio = { workspace = true }
+thiserror = { workspace = true }
+log = { workspace = true }

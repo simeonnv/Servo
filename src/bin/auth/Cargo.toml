@@ -1,0 +1,13 @@
+[package]
+name = "auth"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+actix = "0.13.5"
+actix-web = "4.11.0"
+tokio = { workspace = true }
+log = { workspace = true }
+env_logger = { workspace = true }
+servo_crypto = { workspace = true, features = ["rsa"] }
+key_pair_roller = { workspace = true }

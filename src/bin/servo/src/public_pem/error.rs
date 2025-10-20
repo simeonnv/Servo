@@ -7,4 +7,7 @@ pub enum Error {
 
     #[error("failed to read public pem from fs => {0}")]
     FailedToReadPublicPemFromFS(String),
+
+    #[error("failed to fetch public pem bc error code is other than 200 => {0}")]
+    FailedToFetchPublicPemFromNot200(String),
 }

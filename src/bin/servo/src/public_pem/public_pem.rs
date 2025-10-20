@@ -1,3 +1,4 @@
+use http::StatusCode;
 use std::{borrow::Borrow, fs, path::PathBuf, sync::Arc};
 use url::Url;
 
@@ -9,6 +10,13 @@ pub struct PublicPem(Arc<[u8]>);
 impl PublicPem {
     pub async fn from_http_req(url: &Url) -> Result<Self, Error> {
         let res = reqwest::get(url.as_str()).await?;
+        let status = res.status();
+        if status != StatusCode::OK {
+            return Err(Error::FailedToFetchPublicPemFromNot200(format!(
+                "public pem returned {status}"
+            )));
+        };
+
         let pub_pem = res.bytes().await?.to_vec();
         let pub_pem: Arc<[u8]> = Arc::from(pub_pem.into_boxed_slice());
 

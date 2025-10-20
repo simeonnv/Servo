@@ -12,8 +12,8 @@ pub async fn save_key_pair_db(key_pair: &KeyPair, pool: &Pool<Postgres>) -> Resu
             VALUES ($1, $2, $3);
         "#,
         Uuid::new_v4(),
-        key_pair.private_key.clone(),
-        key_pair.public_key.clone()
+        key_pair.private_key.to_vec(),
+        key_pair.public_key.to_vec()
     )
     .execute(pool)
     .await?;

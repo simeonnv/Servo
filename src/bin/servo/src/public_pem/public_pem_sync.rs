@@ -1,5 +1,5 @@
-use log::warn;
-use std::{path::PathBuf, time::Duration};
+use log::{error, info};
+use std::{any::Any, path::PathBuf, time::Duration};
 use tokio::{
     sync::watch::{self, Receiver, Sender},
     task::JoinHandle,
@@ -84,13 +84,18 @@ async fn background_public_pem_sync_url(
     public_pem_sender: Sender<PublicPem>,
     update_duration: Duration,
 ) {
+    let sender_id = public_pem_sender.type_id();
     loop {
         sleep(update_duration).await;
+        info!("syncing public pem with sender id: {:?}", sender_id);
         let public_pem = PublicPem::from_http_req(&url).await;
         let public_pem = match public_pem {
             Ok(e) => e,
             Err(err) => {
-                warn!("failed to fetch public pem: {err} will retry later...");
+                error!(
+                    "failed to fetch public pem: {err}, with id: {:?} will retry later...",
+                    sender_id
+                );
                 continue;
             }
         };

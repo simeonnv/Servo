@@ -16,8 +16,8 @@ pub async fn get_latest_key_pair_db(pool: &Pool<Postgres>) -> Result<Option<KeyP
     .await?;
 
     let latest_key_pair = latest_key_pair.map(|e| KeyPair {
-        private_key: e.private_key,
-        public_key: e.public_key,
+        private_key: e.private_key.into_boxed_slice(),
+        public_key: e.public_key.into_boxed_slice(),
         creation_time: e.created_at,
     });
 

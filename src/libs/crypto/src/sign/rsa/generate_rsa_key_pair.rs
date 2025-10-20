@@ -8,10 +8,12 @@ pub fn generate_rsa_key_pair() -> Result<KeyPair, Error> {
 
     let private_key = rsa
         .private_key_to_pem()
-        .map_err(|e| Error::KeyGenerateError(e.to_string()))?;
+        .map_err(|e| Error::KeyGenerateError(e.to_string()))?
+        .into_boxed_slice();
     let public_key = rsa
         .public_key_to_pem()
-        .map_err(|e| Error::KeyGenerateError(e.to_string()))?;
+        .map_err(|e| Error::KeyGenerateError(e.to_string()))?
+        .into_boxed_slice();
 
     let now = Utc::now().naive_utc();
 
