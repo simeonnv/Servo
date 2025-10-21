@@ -28,7 +28,7 @@ impl Key {
 pub struct KeyPairRoller {
     public_key: Key,
     private_key: Key,
-    pub roll_inteval: Duration,
+    pub roll_interval: Duration,
     task: JoinHandle<()>,
 }
 
@@ -48,7 +48,7 @@ impl KeyPairRoller {
 }
 
 impl KeyPairRoller {
-    pub fn init_rsa_roller(roll_inteval: Duration) -> Result<Self, Error> {
+    pub fn init_rsa_roller(roll_interval: Duration) -> Result<Self, Error> {
         use servo_crypto::sign::rsa::generate_rsa_key_pair::generate_rsa_key_pair;
         let key_pair = generate_rsa_key_pair()?;
 
@@ -63,15 +63,20 @@ impl KeyPairRoller {
 
         let task = tokio::spawn(background_key_pair_roller(
             generate_rsa_key_pair,
-            roll_inteval.clone(),
+            roll_interval.clone(),
             public_key_tx,
             private_key_tx,
         ));
 
+        info!(
+            "inited rsa roller with duration: {:?} hours",
+            &(roll_interval.as_secs() as f64) / 60_f64 / 60_f64
+        );
+
         Ok(Self {
             public_key,
             private_key,
-            roll_inteval,
+            roll_interval,
             task,
         })
     }
@@ -79,12 +84,12 @@ impl KeyPairRoller {
 
 async fn background_key_pair_roller<T: Fn() -> Result<KeyPair, CryptoError>>(
     key_pair_generator: T,
-    roll_inteval: Duration,
+    roll_interval: Duration,
     pub_key_tx: Sender<Arc<[u8]>>,
     priv_key_tx: Sender<Arc<[u8]>>,
 ) {
     loop {
-        sleep(roll_inteval).await;
+        sleep(roll_interval).await;
         info!("generating new keypair");
         let key_pair = key_pair_generator();
         let key_pair = match key_pair {

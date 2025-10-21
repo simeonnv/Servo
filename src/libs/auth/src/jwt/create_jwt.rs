@@ -2,7 +2,7 @@ use base64::{Engine, prelude::BASE64_URL_SAFE_NO_PAD};
 use chrono::{Duration, Utc};
 use log::debug;
 use serde_json::json;
-use servo_crypto::sign::falcon512::sign_falcon512::sign_falcon512;
+use servo_crypto::sign::rsa::sign_rsa::sign_rsa;
 use uuid::Uuid;
 
 use crate::{Error, jwt::jwt_claims::JWTClaims};
@@ -11,7 +11,7 @@ pub async fn create_jwt(
     account_id: Uuid,
     account_role: String,
     jwt_lifetime: Duration,
-    private_key: &Vec<u8>,
+    private_key: &[u8],
 ) -> Result<String, Error> {
     let now = Utc::now().naive_utc();
     let jwt_claims: JWTClaims = JWTClaims {
@@ -26,7 +26,7 @@ pub async fn create_jwt(
         //     AlgorithmType::Falcon512 => "PQ-FALC512",
         //     AlgorithmType::Rsa => "RS256",
         // },
-        "alg": "PQ-FALC512",
+        "alg": "RS256",
         "typ": "JWT"
     })
     .to_string();
@@ -39,7 +39,7 @@ pub async fn create_jwt(
     let head_and_body = format!("{}.{}", base64_header, base64_claims);
     let head_and_body_bytes = format!("{}.{}", base64_header, base64_claims).into_bytes();
 
-    let signature = sign_falcon512(&head_and_body_bytes, private_key)?;
+    let signature = sign_rsa(&head_and_body_bytes, private_key)?;
 
     let base64_signature = BASE64_URL_SAFE_NO_PAD.encode(signature);
 

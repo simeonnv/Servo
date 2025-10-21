@@ -11,3 +11,16 @@ log = { workspace = true }
 env_logger = { workspace = true }
 servo_crypto = { workspace = true, features = ["rsa"] }
 key_pair_roller = { workspace = true }
+servo_account = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+sqlx = { workspace = true }
+servo_auth = { workspace = true }
+
+chrono = { workspace = true }
+
+utoipa = { version = "5.2.0", features = ["chrono", "uuid"] }
+utoipa-swagger-ui = { version = "9.0.0", features = ["actix-web", "vendored"] }
+envconfig = "0.11.0"
+dotenv = "0.15.0"
+lazy_static = "1.5.0"

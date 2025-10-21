@@ -1,10 +1,16 @@
-use std::borrow::Borrow;
+use std::{borrow::Borrow, fmt};
 
 use pingora::http::RequestHeader;
 use thiserror::Error;
 
 #[derive(PartialEq, Eq, Hash, Debug)]
 pub struct DownStreamHost(String);
+
+impl fmt::Display for DownStreamHost {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 impl Borrow<str> for DownStreamHost {
     fn borrow(&self) -> &str {

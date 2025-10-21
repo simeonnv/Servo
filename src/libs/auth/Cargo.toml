@@ -22,5 +22,5 @@ sqlx = { workspace = true, features = [
     "uuid",
 ] }
 
-servo_crypto = { workspace = true, features = ["falcon512", "argon2"] }
+servo_crypto = { workspace = true, features = ["rsa"] }
 # db = { workspace = true }

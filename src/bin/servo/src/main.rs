@@ -4,9 +4,9 @@ use pingora::{proxy::http_proxy_service, server::Server};
 use servo_toml::read_or_create_toml;
 use tokio::runtime::Runtime;
 
-use crate::proxy_state::ProxyState;
+use crate::proxy::Proxy;
 
-mod proxy_state;
+mod proxy;
 
 pub mod proxy_ctx;
 
@@ -33,7 +33,7 @@ fn main() -> Result<(), std::io::Error> {
 
     let rt = Runtime::new().unwrap();
     let server_map = rt.block_on(ServerMap::build_from_config_toml(&config_toml));
-    let mut proxy = http_proxy_service(&my_server.configuration, ProxyState { server_map });
+    let mut proxy = http_proxy_service(&my_server.configuration, Proxy { server_map });
 
     for addr in &config_toml.config.listens {
         proxy.add_tcp(&addr.to_string());

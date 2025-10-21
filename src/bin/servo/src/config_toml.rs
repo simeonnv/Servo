@@ -29,6 +29,7 @@ pub struct ServerToml {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LocationToml {
     pub endpoints: Vec<String>,
+    // pub blacklisted_endpoints: Vec<String>,
     pub proxy_passes: Vec<SocketAddr>,
     pub health_check: Option<bool>,
     pub health_check_frequency: Option<u64>,
@@ -60,7 +61,8 @@ impl Default for ConfigToml {
                 check_duration: 10_000,
             }),
             locations: vec![LocationToml {
-                endpoints: vec!["/".into(), "/{*any}".into()], // Changed from endpoint to endpoints
+                endpoints: vec!["/".into(), "/{*any}".into()],
+                // blacklisted_endpoints: vec!["/public_pem".into()],
                 health_check: Some(true),
                 health_check_frequency: Some(3000),
                 proxy_passes: vec!["192.168.1.103:8080".parse().unwrap()],

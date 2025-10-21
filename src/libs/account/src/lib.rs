@@ -1,5 +1,4 @@
-pub mod jwt;
-pub mod refresh_token;
+pub mod query;
 
 mod error;
 pub use error::Error;

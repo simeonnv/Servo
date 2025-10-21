@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use async_trait::async_trait;
-use log::{error, info};
+use log::{error, info, warn};
 use pingora::ErrorType::HTTPStatus;
 use pingora::{Error, Result};
 use pingora::{
@@ -12,12 +12,12 @@ use pingora::{
 use crate::proxy_ctx::{AfterFilterCTX, ProxyCTX};
 use crate::server_map::{DownStreamHost, ServerMap};
 
-pub struct ProxyState {
+pub struct Proxy {
     pub server_map: ServerMap,
 }
 
 #[async_trait]
-impl ProxyHttp for ProxyState {
+impl ProxyHttp for Proxy {
     type CTX = ProxyCTX;
 
     fn new_ctx(&self) -> Self::CTX {
@@ -83,6 +83,33 @@ impl ProxyHttp for ProxyState {
 
         let mut peer = HttpPeer::new(&proxy_pass, false, "".into());
         peer.options.connection_timeout = Some(Duration::from_millis(100));
+
         Ok(Box::new(peer))
+    }
+
+    async fn logging(
+        &self,
+        session: &mut Session,
+        err: Option<&pingora::Error>,
+        ctx: &mut Self::CTX,
+    ) {
+        let response_code = session
+            .response_written()
+            .map_or(0, |resp| resp.status.as_u16());
+
+        let addr = session
+            .client_addr()
+            .map(|e| e.to_string())
+            .unwrap_or("unknown".to_string());
+
+        if let Some(err) = err {
+            warn!("{err}");
+        }
+
+        info!(
+            "{} response code: {response_code}, addr: {}",
+            self.request_summary(session, ctx),
+            addr
+        );
     }
 }

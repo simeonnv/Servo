@@ -1,5 +1,5 @@
 use base64::{Engine, prelude::BASE64_URL_SAFE_NO_PAD};
-use servo_crypto::sign::falcon512::validate_falcon512_sign::validate_falcon512_sign;
+use servo_crypto::sign::rsa::validate_rsa_sign::validate_rsa_sign;
 
 use crate::{Error, jwt::jwt_claims::JWTClaims};
 
@@ -20,7 +20,7 @@ pub async fn decode_jwt(jwt: &String, public_key: &Vec<u8>) -> Result<JWTClaims,
 
     let head_and_body = format!("{}.{}", head_base64, body_base64);
 
-    validate_falcon512_sign(&head_and_body.into_bytes(), &sign, public_key)
+    validate_rsa_sign(&head_and_body.into_bytes(), &sign, public_key)
         .map_err(|e| Error::InvalidJWT(e.to_string()))?;
 
     let body = BASE64_URL_SAFE_NO_PAD.decode(body_base64)?;

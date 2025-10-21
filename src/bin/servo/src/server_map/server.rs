@@ -1,4 +1,7 @@
+use std::collections::HashSet;
+
 use matchit::Router;
+use serde::ser;
 use thiserror::Error;
 
 use crate::server_map::proxy_pass::Error as ProxyPassError;
@@ -14,6 +17,7 @@ pub struct Server {
 impl Server {
     pub async fn from_server_toml(server_toml: &ServerToml) -> Result<Self, Error> {
         let mut router = Router::new();
+
         for location_toml in &server_toml.locations {
             for endpoint in location_toml.endpoints.clone() {
                 let proxy_pass = ProxyPass::try_from(location_toml)?;
