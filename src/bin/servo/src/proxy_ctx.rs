@@ -23,6 +23,6 @@ impl Default for ProxyCTX {
 pub struct AfterFilterCTX {
     pub server: Arc<Server>,
     pub host_header: DownStreamHost,
-    pub endpoint: String,
+    pub url_concat_suffix: String,
     pub proxy_passes: ProxyPass,
 }

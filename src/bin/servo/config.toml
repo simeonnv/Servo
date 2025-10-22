@@ -1,7 +1,7 @@
 [config]
 gateway_name = "give me a name vro"
 listens = ["0.0.0.0:54321"]
-log_level = "INFO"
+log_level = "DEBUG"
 
 [[servers]]
 name = "test"
@@ -12,7 +12,7 @@ public_pem_http_url = "http://0.0.0.0:8989/public_pem"
 check_duration = 360_000
 
 [[servers.locations]]
-endpoints = ["/", "/{*any}"]
+endpoints = ["/auth", "/auth/{*any}"]
 proxy_passes = ["0.0.0.0:8989"]
 health_check = true
 health_check_frequency = 3000

@@ -8,9 +8,9 @@ pub fn load_env_vars() -> EnvVars {
     // if dotenv().ok().is_none() {
     let env_path;
     if cfg!(debug_assertions) {
-        env_path = Path::new("./.env");
+        env_path = Path::new("./.env.dev");
     } else {
-        env_path = Path::new("./.env.prod");
+        env_path = Path::new("./.env");
     }
 
     if let Err(e) = dotenv::from_path(env_path) {

@@ -1,7 +1,4 @@
-use std::collections::HashSet;
-
 use matchit::Router;
-use serde::ser;
 use thiserror::Error;
 
 use crate::server_map::proxy_pass::Error as ProxyPassError;
@@ -10,7 +7,8 @@ use crate::{config_toml::ServerToml, public_pem::PublicPemSync, server_map::Prox
 #[derive(Debug)]
 pub struct Server {
     pub name: String,
-    pub routes: Router<ProxyPass>,
+    // the string is the url concat suffix
+    pub routes: Router<(ProxyPass, String)>,
     pub public_key_sync: Option<PublicPemSync>,
 }
 
@@ -21,8 +19,9 @@ impl Server {
         for location_toml in &server_toml.locations {
             for endpoint in location_toml.endpoints.clone() {
                 let proxy_pass = ProxyPass::try_from(location_toml)?;
+                let url_concat_suffix = compute_base_endpoint(&endpoint);
                 router
-                    .insert(endpoint, proxy_pass)
+                    .insert(endpoint, (proxy_pass, url_concat_suffix))
                     .map_err(|err| Error::FailedToInsertIntoRouter(err.to_string()))?;
             }
         }
@@ -57,4 +56,24 @@ pub enum Error {
 
     #[error("Failed to insert into router => {0}")]
     FailedToInsertIntoRouter(String),
+}
+
+fn compute_base_endpoint(pattern: &str) -> String {
+    let parts: Vec<&str> = pattern.split('/').collect();
+    let mut base_parts = Vec::new();
+
+    for part in parts {
+        if part.starts_with('{') {
+            break;
+        }
+        if !part.is_empty() {
+            base_parts.push(part);
+        }
+    }
+
+    if base_parts.is_empty() {
+        "/".to_string()
+    } else {
+        format!("/{}", base_parts.join("/"))
+    }
 }

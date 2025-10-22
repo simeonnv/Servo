@@ -1,8 +1,10 @@
 use std::time::Duration;
 
 use async_trait::async_trait;
-use log::{error, info, warn};
+use http::Uri;
+use log::{debug, error, info, warn};
 use pingora::ErrorType::HTTPStatus;
+use pingora::http::RequestHeader;
 use pingora::{Error, Result};
 use pingora::{
     prelude::HttpPeer,
@@ -45,19 +47,20 @@ impl ProxyHttp for Proxy {
             }
         };
 
-        let proxy_passes = match server.routes.at(endpoint) {
+        let route_match = match server.routes.at(endpoint) {
             Ok(e) => e,
             Err(err) => {
                 info!("endpoint / path doesnt map to a upstream / proxy pass: {err}");
                 return Ok(true);
             }
         };
+        let (proxy_passes, url_concat_suffix) = route_match.value;
 
         let after_filter_ctx = AfterFilterCTX {
             server: server.clone(),
-            endpoint: endpoint.to_owned(),
+            url_concat_suffix: url_concat_suffix.clone(),
             host_header: host_header,
-            proxy_passes: proxy_passes.value.to_owned(),
+            proxy_passes: proxy_passes.to_owned(),
         };
 
         ctx.after_filter = Some(after_filter_ctx);
@@ -87,6 +90,26 @@ impl ProxyHttp for Proxy {
         Ok(Box::new(peer))
     }
 
+    async fn upstream_request_filter(
+        &self,
+        _session: &mut Session,
+        request: &mut RequestHeader,
+        ctx: &mut Self::CTX,
+    ) -> Result<()> {
+        let path = request.uri.path();
+        let ctx_after_filter = ctx.after_filter.as_ref().unwrap();
+        let url_concat_suffix = &ctx_after_filter.url_concat_suffix;
+
+        let concat_path = concat_path(path, url_concat_suffix);
+        let uri = Uri::builder().path_and_query(concat_path).build().unwrap();
+
+        debug!("routed from path: {path}, to {uri}");
+
+        request.set_uri(uri);
+
+        Ok(())
+    }
+
     async fn logging(
         &self,
         session: &mut Session,
@@ -111,5 +134,21 @@ impl ProxyHttp for Proxy {
             self.request_summary(session, ctx),
             addr
         );
+    }
+}
+
+fn concat_path(path: &str, suffix: &str) -> String {
+    if path == suffix {
+        return "/".to_string();
+    }
+    if path.starts_with(suffix) {
+        let rest = path.strip_prefix(suffix).unwrap_or("");
+        if rest.starts_with("/") {
+            format!("{}", rest)
+        } else {
+            format!("/{}", rest)
+        }
+    } else {
+        path.to_string()
     }
 }
