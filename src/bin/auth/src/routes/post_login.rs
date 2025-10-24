@@ -5,18 +5,14 @@ use actix_web::{
 use key_pair_roller::KeyPairRoller;
 use serde::{Deserialize, Serialize};
 use servo_account::query::get_account_by_credentials_db;
-use servo_auth::{
-    jwt::create_jwt::create_jwt, refresh_token::create_refresh_token_db::create_refresh_token_db,
-};
+use servo_auth::refresh_token::create_refresh_token_db::create_refresh_token_db;
 use sqlx::{Pool, Postgres};
 use utoipa::ToSchema;
 
 use crate::{
     Error,
-    config::{
-        JWT_LIFETIME, MAX_PASSWORD_LENGHT, MAX_USERNAME_LENGHT, MIN_PASSWORD_LENGHT,
-        MIN_USERNAME_LENGHT,
-    },
+    config::{MAX_PASSWORD_LENGHT, MAX_USERNAME_LENGHT, MIN_PASSWORD_LENGHT, MIN_USERNAME_LENGHT},
+    generate_jwt,
 };
 
 #[derive(Serialize, Deserialize, ToSchema)]
@@ -67,14 +63,9 @@ pub async fn post_login(
     let account = get_account_by_credentials_db(&body.username, &body.password, &db_pool).await?;
     let refresh_token =
         create_refresh_token_db(&account.account_id, &account.role, &db_pool).await?;
-    let private_key = key_pair_roller.get_private_key();
-    let jwt = create_jwt(
-        account.account_id,
-        "user".into(),
-        JWT_LIFETIME,
-        &private_key,
-    )
-    .await?;
+    let private_pem = key_pair_roller.get_private_key();
+
+    let jwt = generate_jwt(account.account_id, vec!["user".into()], &private_pem)?;
 
     return Ok(HttpResponse::Ok().json(Res {
         status: "success",

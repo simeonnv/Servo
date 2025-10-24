@@ -17,3 +17,4 @@ matchit = { workspace = true }
 tokio = { workspace = true }
 thiserror = { workspace = true }
 reqwest = "0.12.24"
+servo_auth = { workspace = true }

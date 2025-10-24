@@ -44,6 +44,12 @@ impl Borrow<[u8]> for PublicPem {
     }
 }
 
+impl PublicPem {
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.0
+    }
+}
+
 impl Clone for PublicPem {
     fn clone(&self) -> Self {
         Self(self.0.clone())

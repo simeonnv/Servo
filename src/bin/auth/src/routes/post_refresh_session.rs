@@ -5,14 +5,11 @@ use actix_web::{
 
 use key_pair_roller::KeyPairRoller;
 use serde::{Deserialize, Serialize};
-use servo_auth::{
-    jwt::create_jwt::create_jwt,
-    refresh_token::get_refresh_token_data_db::get_refresh_token_data_db,
-};
+use servo_auth::refresh_token::get_refresh_token_data_db::get_refresh_token_data_db;
 use sqlx::{Pool, Postgres};
 use utoipa::ToSchema;
 
-use crate::{Error, config::JWT_LIFETIME};
+use crate::{Error, generate_jwt};
 
 #[derive(Serialize, Deserialize, ToSchema)]
 #[schema(as = Post::Auth::RefreshSession::Req)]
@@ -48,14 +45,9 @@ pub async fn post_refresh_session(
     key_pair_roller: Data<KeyPairRoller>,
 ) -> Result<HttpResponse, Error> {
     let token_data = get_refresh_token_data_db(&body.refresh_token, &db_pool).await?;
-    let private_key = key_pair_roller.get_private_key();
-    let jwt = create_jwt(
-        token_data.account_id,
-        "user".into(),
-        JWT_LIFETIME,
-        &private_key,
-    )
-    .await?;
+    let private_pem = key_pair_roller.get_private_key();
+
+    let jwt = generate_jwt(token_data.account_id, vec!["user".into()], &private_pem)?;
 
     return Ok(HttpResponse::Ok().json(Res {
         status: "success",

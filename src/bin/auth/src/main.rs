@@ -14,7 +14,13 @@ pub use error::Error;
 
 pub mod config;
 
+mod jwt_claims;
+pub use jwt_claims::JWTClaims;
+
 pub mod api_docs;
+
+mod generate_jwt;
+pub use generate_jwt::generate_jwt;
 
 use crate::{config::KEY_PAIR_LIFETIME, env::ENVVARS, routes::routes};
 

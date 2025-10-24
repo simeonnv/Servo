@@ -3,7 +3,7 @@ use servo_crypto::sign::rsa::validate_rsa_sign::validate_rsa_sign;
 
 use crate::{Error, jwt::jwt_claims::JWTClaims};
 
-pub async fn decode_jwt(jwt: &String, public_key: &Vec<u8>) -> Result<JWTClaims, Error> {
+pub async fn decode_jwt(jwt: &String, public_key: &[u8]) -> Result<JWTClaims, Error> {
     let jwt_parts: Vec<&str> = jwt.splitn(3, '.').collect();
 
     if jwt_parts.len() != 3 {

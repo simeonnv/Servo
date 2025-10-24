@@ -10,6 +10,8 @@ use pingora::{
     prelude::HttpPeer,
     proxy::{ProxyHttp, Session},
 };
+use servo_auth::jwt::Jwt;
+use servo_auth::jwt::algoritms::Rsa;
 
 use crate::proxy_ctx::{AfterFilterCTX, ProxyCTX};
 use crate::server_map::{DownStreamHost, ServerMap};
@@ -128,6 +130,16 @@ impl ProxyHttp for Proxy {
             .strip_prefix("Bearer ")
             .ok_or_else(|| Error::explain(HTTPStatus(401), "Unauthorized"))?
             .trim();
+        dbg!(jwt);
+
+        let public_pem = upstream_auth.public_pem_sync.get_public_pem();
+
+        let jwt = Jwt::<Rsa>::decode(jwt, public_pem.as_bytes()).map_err(|err| {
+            debug!("jwt decode error: {err}");
+            Error::explain(HTTPStatus(401), "Unauthorized")
+        })?;
+
+        dbg!(jwt);
 
         Ok(())
     }
