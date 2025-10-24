@@ -14,7 +14,6 @@ pub struct ServerMap {
     pub routes: DashMap<DownStreamHost, Arc<Server>>,
 }
 
-// peak code
 impl ServerMap {
     pub async fn build_from_config_toml(config: &ConfigToml) -> Self {
         let routes = DashMap::new();

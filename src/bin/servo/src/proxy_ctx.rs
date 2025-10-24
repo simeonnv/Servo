@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::server_map::{DownStreamHost, ProxyPass, Server};
+use crate::server_map::{DownStreamHost, ProxyPass, Server, Upstream};
 
 #[derive(Debug)]
 pub struct ProxyCTX {
@@ -23,6 +23,5 @@ impl Default for ProxyCTX {
 pub struct AfterFilterCTX {
     pub server: Arc<Server>,
     pub host_header: DownStreamHost,
-    pub url_concat_suffix: String,
-    pub proxy_passes: ProxyPass,
+    pub upstream: Arc<Upstream>,
 }

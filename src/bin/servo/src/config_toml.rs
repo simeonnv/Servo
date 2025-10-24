@@ -33,6 +33,8 @@ pub struct LocationToml {
     pub proxy_passes: Vec<SocketAddr>,
     pub health_check: Option<bool>,
     pub health_check_frequency: Option<u64>,
+    pub requires_jwt: Option<bool>,
+    pub jwt_allowed_roles: Option<Vec<String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -62,10 +64,11 @@ impl Default for ConfigToml {
             }),
             locations: vec![LocationToml {
                 endpoints: vec!["/".into(), "/{*any}".into()],
-                // blacklisted_endpoints: vec!["/public_pem".into()],
                 health_check: Some(true),
                 health_check_frequency: Some(3000),
                 proxy_passes: vec!["192.168.1.103:8080".parse().unwrap()],
+                requires_jwt: Some(true),
+                jwt_allowed_roles: Some(vec!["user".into()]),
             }],
         };
 

@@ -54,13 +54,12 @@ impl ProxyHttp for Proxy {
                 return Ok(true);
             }
         };
-        let (proxy_passes, url_concat_suffix) = route_match.value;
+        let upstream = route_match.value.clone();
 
         let after_filter_ctx = AfterFilterCTX {
             server: server.clone(),
-            url_concat_suffix: url_concat_suffix.clone(),
             host_header: host_header,
-            proxy_passes: proxy_passes.to_owned(),
+            upstream,
         };
 
         ctx.after_filter = Some(after_filter_ctx);
@@ -74,9 +73,11 @@ impl ProxyHttp for Proxy {
         ctx: &mut Self::CTX,
     ) -> Result<Box<HttpPeer>> {
         let after_filter_ctx = ctx.after_filter.as_ref().unwrap();
+        // after_filter_ctx.
 
         let proxy_pass = after_filter_ctx
-            .proxy_passes
+            .upstream
+            .proxy_pass
             .load_balancer
             .select(b"", 256)
             .ok_or_else(|| {
@@ -98,7 +99,7 @@ impl ProxyHttp for Proxy {
     ) -> Result<()> {
         let path = request.uri.path();
         let ctx_after_filter = ctx.after_filter.as_ref().unwrap();
-        let url_concat_suffix = &ctx_after_filter.url_concat_suffix;
+        let url_concat_suffix = &ctx_after_filter.upstream.url_concat_suffix;
 
         let concat_path = concat_path(path, url_concat_suffix);
         let uri = Uri::builder().path_and_query(concat_path).build().unwrap();
@@ -106,6 +107,27 @@ impl ProxyHttp for Proxy {
         debug!("routed from path: {path}, to {uri}");
 
         request.set_uri(uri);
+
+        let upstream_auth = match &ctx_after_filter.upstream.auth {
+            Some(e) => e,
+            None => return Ok(()),
+        };
+
+        if !upstream_auth.jwt_required {
+            return Ok(());
+        }
+
+        let auth_header = request
+            .headers
+            .get("Authorization")
+            .ok_or_else(|| Error::explain(HTTPStatus(401), "Unauthorized"))?
+            .to_str()
+            .map_err(|_| Error::explain(HTTPStatus(401), "Unauthorized"))?;
+
+        let jwt = auth_header
+            .strip_prefix("Bearer ")
+            .ok_or_else(|| Error::explain(HTTPStatus(401), "Unauthorized"))?
+            .trim();
 
         Ok(())
     }

@@ -1,7 +1,7 @@
 [config]
 gateway_name = "give me a name vro"
 listens = ["0.0.0.0:54321"]
-log_level = "DEBUG"
+log_level = "INFO"
 
 [[servers]]
 name = "test"
@@ -13,6 +13,8 @@ check_duration = 360_000
 
 [[servers.locations]]
 endpoints = ["/auth", "/auth/{*any}"]
+jwt_allowed_roles = ["user"]
+requires_jwt = true
 proxy_passes = ["0.0.0.0:8989"]
 health_check = true
 health_check_frequency = 3000

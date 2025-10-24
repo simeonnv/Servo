@@ -9,3 +9,9 @@ pub use server::Server;
 
 pub mod server_map;
 pub use server_map::ServerMap;
+
+mod upstream;
+pub use upstream::Upstream;
+
+mod upstream_auth;
+pub use upstream_auth::UpstreamAuth;
