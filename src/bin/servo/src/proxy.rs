@@ -1,6 +1,8 @@
+use std::collections::HashSet;
 use std::time::Duration;
 
 use async_trait::async_trait;
+use chrono::Utc;
 use http::Uri;
 use log::{debug, error, info, warn};
 use pingora::ErrorType::HTTPStatus;
@@ -139,9 +141,48 @@ impl ProxyHttp for Proxy {
             Error::explain(HTTPStatus(401), "Unauthorized")
         })?;
 
-        dbg!(jwt);
+        let exp = jwt
+            .serialized_body
+            .get("exp")
+            .ok_or_else(|| Error::explain(HTTPStatus(401), "Unauthorized"))?
+            .as_u64()
+            .ok_or_else(|| Error::explain(HTTPStatus(401), "Unauthorized"))?;
 
-        Ok(())
+        let now = Utc::now().naive_utc().and_utc().timestamp() as u64;
+
+        if now > exp {
+            return Err(Error::explain(HTTPStatus(401), "expired token"));
+        }
+
+        let allowed_roles = match &upstream_auth.jwt_auth_roles {
+            Some(e) => e,
+            None => return Ok(()),
+        };
+
+        let roles = jwt
+            .serialized_body
+            .get("roles")
+            .ok_or_else(|| Error::explain(HTTPStatus(401), "Unauthorized"))?
+            .as_array()
+            .ok_or_else(|| Error::explain(HTTPStatus(401), "Unauthorized"))?;
+
+        let mut token_roles = HashSet::with_capacity(roles.len() * 2);
+        for role in roles {
+            let role = role.as_str();
+            let role = match role {
+                Some(e) => e,
+                None => continue,
+            };
+            token_roles.insert(role);
+        }
+
+        for allowed_role in allowed_roles {
+            if token_roles.contains(allowed_role.as_str()) {
+                return Ok(());
+            };
+        }
+
+        Err(Error::explain(HTTPStatus(401), "Unauthorized"))
     }
 
     async fn logging(

@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 
 use base64::{Engine, prelude::BASE64_URL_SAFE_NO_PAD};
 use serde::Serialize;
+use serde_json::Value as JsonValue;
 
 use crate::{
     Error,
@@ -20,6 +21,7 @@ pub struct Jwt<AlgType> {
     pub head: Box<[u8]>,
     pub body: Box<[u8]>,
     pub sig: Box<[u8]>,
+    pub serialized_body: JsonValue,
 }
 
 impl<AlgType: SigAlgoritm> Jwt<AlgType> {
@@ -45,10 +47,13 @@ impl<AlgType: SigAlgoritm> Jwt<AlgType> {
             .map_err(|e| Error::InvalidJWT(e.to_string()))?
             .into_boxed_slice();
 
+        let serialized_body = serde_json::from_slice(&body)?;
+
         Ok(Self {
             alg: PhantomData,
             head,
             body,
+            serialized_body,
             sig: sig_str,
         })
     }
@@ -60,6 +65,7 @@ impl<AlgType: SigAlgoritm> Jwt<AlgType> {
     ) -> Result<Self, Error> {
         let head_json = serde_json::to_string(&head)?; // Renamed for clarity
         let body_json = serde_json::to_string(&body)?; // Renamed for clarity
+        let serialized_body = serde_json::from_str(&body_json)?;
 
         let head_base64 = BASE64_URL_SAFE_NO_PAD.encode(&head_json);
         let body_base64 = BASE64_URL_SAFE_NO_PAD.encode(&body_json);
@@ -75,6 +81,7 @@ impl<AlgType: SigAlgoritm> Jwt<AlgType> {
             alg: PhantomData,
             head: head_bytes,
             body: body_bytes,
+            serialized_body,
             sig,
         })
     }
