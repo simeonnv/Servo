@@ -35,7 +35,6 @@ struct DataRes {
     path = "/refresh_session",
     request_body = Req,
     responses(),
-    security(),
     tag = "Auth"
 )]
 #[post("/refresh_session")]

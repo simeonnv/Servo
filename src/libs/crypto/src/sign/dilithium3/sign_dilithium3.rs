@@ -1,7 +1,7 @@
 use crate::Error;
 use oqs::sig::{Algorithm, Sig};
 
-pub fn sign_dilithium3(input: &[u8], private_key: &[u8]) -> Result<Vec<u8>, Error> {
+pub fn sign_dilithium3(input: &[u8], private_key: &[u8]) -> Result<Box<[u8]>, Error> {
     let sig_alg =
         Sig::new(Algorithm::Dilithium3).map_err(|e| Error::AlgorithmError(e.to_string()))?;
 
@@ -11,7 +11,7 @@ pub fn sign_dilithium3(input: &[u8], private_key: &[u8]) -> Result<Vec<u8>, Erro
     let signature = sig_alg
         .sign(input, private_key)
         .map_err(|e| Error::EncryptionError(e.to_string()))?;
-    let signature = signature.into_vec();
+    let signature = signature.into_vec().into_boxed_slice();
 
     Ok(signature)
 }

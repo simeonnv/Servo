@@ -41,7 +41,6 @@ struct DataRes {
     path = "/login",
     request_body = Req,
     responses(),
-    security(),
     tag = "Auth"
 )]
 #[post("/login")]

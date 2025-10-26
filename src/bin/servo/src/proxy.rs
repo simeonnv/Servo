@@ -30,6 +30,7 @@ impl ProxyHttp for Proxy {
         Self::CTX::default()
     }
 
+    // gets the reqheader and chooses a server relating to it
     async fn request_filter(&self, session: &mut Session, ctx: &mut Self::CTX) -> Result<bool> {
         // ctx.beta_user = check_beta_user(session.req_header());
         let req_header = session.req_header();
@@ -71,6 +72,7 @@ impl ProxyHttp for Proxy {
         Ok(false)
     }
 
+    // extracts a good proxy pass from the load balancer
     async fn upstream_peer(
         &self,
         _session: &mut Session,
@@ -95,6 +97,8 @@ impl ProxyHttp for Proxy {
         Ok(Box::new(peer))
     }
 
+    // handles route stripping and token auth
+    // checks if the token has exp and roles
     async fn upstream_request_filter(
         &self,
         _session: &mut Session,

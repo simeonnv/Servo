@@ -11,7 +11,10 @@ pub fn generate_dilithium3_key_pair() -> Result<KeyPair, Error> {
     let (public_key, private_key) = sig_alg
         .keypair()
         .map_err(|e| Error::KeyGenerateError(e.to_string()))?;
-    let (public_key, private_key) = (public_key.into_vec(), private_key.into_vec());
+    let (public_key, private_key) = (
+        public_key.into_vec().into_boxed_slice(),
+        private_key.into_vec().into_boxed_slice(),
+    );
 
     Ok(KeyPair {
         private_key,

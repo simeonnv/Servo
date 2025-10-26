@@ -6,9 +6,6 @@ use actix_web::{HttpResponse, Responder, get};
     responses(
         (status = 200, body = String, example = "pong"),
     ),
-    security(
-        ("bearer_auth" = [])
-    ),
     tag = "Health"
 )]
 #[get("/ping")]

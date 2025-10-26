@@ -2,7 +2,7 @@ use oqs::sig::{Algorithm, Sig};
 
 use crate::Error;
 
-pub fn sign_falcon512(input: &[u8], private_key: &[u8]) -> Result<Vec<u8>, Error> {
+pub fn sign_falcon512(input: &[u8], private_key: &[u8]) -> Result<Box<[u8]>, Error> {
     let sig_alg =
         Sig::new(Algorithm::Falcon512).map_err(|e| Error::AlgorithmError(e.to_string()))?;
     let private_key = sig_alg
@@ -13,7 +13,7 @@ pub fn sign_falcon512(input: &[u8], private_key: &[u8]) -> Result<Vec<u8>, Error
         .sign(input, private_key)
         .map_err(|e| Error::EncryptionError(e.to_string()))?;
 
-    let signature = signature.into_vec();
+    let signature = signature.into_vec().into_boxed_slice();
 
     Ok(signature)
 }

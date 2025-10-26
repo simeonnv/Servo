@@ -7,9 +7,6 @@ use key_pair_roller::KeyPairRoller;
     responses(
         (status = 200, body = String, example = "<whol ass public pem>"),
     ),
-    security(
-        ("bearer_auth" = [])
-    ),
     tag = "Gateway"
 )]
 #[get("/public_pem")]

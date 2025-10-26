@@ -9,12 +9,6 @@ use crate::{
     jwt::{algoritms::SigAlgoritm, split_jwt::split_jwt},
 };
 
-#[cfg(feature = "dilithium3")]
-struct Dilithium3;
-
-#[cfg(feature = "falcon512")]
-struct Falcon512;
-
 #[derive(Debug)]
 pub struct Jwt<AlgType> {
     alg: PhantomData<AlgType>,
