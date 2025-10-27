@@ -15,3 +15,6 @@ pub use upstream::Upstream;
 
 mod upstream_auth;
 pub use upstream_auth::UpstreamAuth;
+
+mod rate_limiter;
+pub use rate_limiter::RateLimiter;

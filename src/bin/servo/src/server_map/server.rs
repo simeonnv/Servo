@@ -4,7 +4,7 @@ use matchit::Router;
 use thiserror::Error;
 
 use crate::server_map::proxy_pass::Error as ProxyPassError;
-use crate::server_map::{Upstream, UpstreamAuth};
+use crate::server_map::{RateLimiter, Upstream, UpstreamAuth};
 use crate::{config_toml::ServerToml, public_pem::PublicPemSync, server_map::ProxyPass};
 
 #[derive(Debug)]
@@ -31,6 +31,10 @@ impl Server {
         let public_key_sync = public_key_sync.map(|e| Arc::new(e));
 
         for location_toml in &server_toml.locations {
+            let rate_limiter = location_toml
+                .max_requests_per_sec
+                .map(|e| Arc::new(RateLimiter::new(e as isize)));
+
             for endpoint in location_toml.endpoints.clone() {
                 let proxy_pass = ProxyPass::try_from(location_toml)?;
                 let url_concat_suffix = compute_base_endpoint(&endpoint);
@@ -43,9 +47,11 @@ impl Server {
                         jwt_auth_roles: location_toml.jwt_allowed_roles.clone(),
                     });
 
+                let rate_limiter = rate_limiter.clone();
                 let upstream = Upstream {
                     url_concat_suffix,
                     proxy_pass,
+                    rate_limiter,
                     auth: upstream_auth,
                 };
 

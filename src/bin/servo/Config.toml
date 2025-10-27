@@ -13,8 +13,9 @@ check_duration = 360_000
 
 [[servers.locations]]
 endpoints = ["/auth", "/auth/{*any}"]
-jwt_allowed_roles = ["user"]
-requires_jwt = true
+# jwt_allowed_roles = ["user"]
+# requires_jwt = true
+max_requests_per_sec = 10
 proxy_passes = ["0.0.0.0:8989"]
 health_check = true
 health_check_frequency = 3000

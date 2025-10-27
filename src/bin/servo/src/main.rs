@@ -20,7 +20,7 @@ pub mod public_pem;
 
 // #[tokio::main]
 fn main() -> Result<(), std::io::Error> {
-    let config_toml = read_or_create_toml::<ConfigToml>("./config.toml")
+    let config_toml = read_or_create_toml::<ConfigToml>("./Config.toml")
         .unwrap_or_else(|err| panic!("config toml load err => {err}"));
     env_logger::Builder::from_env(
         Env::default().default_filter_or(config_toml.config.log_level.as_str()),

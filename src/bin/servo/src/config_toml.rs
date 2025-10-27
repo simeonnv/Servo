@@ -30,6 +30,7 @@ pub struct ServerToml {
 pub struct LocationToml {
     pub endpoints: Vec<String>,
     // pub blacklisted_endpoints: Vec<String>,
+    pub max_requests_per_sec: Option<usize>,
     pub proxy_passes: Vec<SocketAddr>,
     pub health_check: Option<bool>,
     pub health_check_frequency: Option<u64>,
@@ -67,6 +68,7 @@ impl Default for ConfigToml {
                 health_check: Some(true),
                 health_check_frequency: Some(3000),
                 proxy_passes: vec!["192.168.1.103:8080".parse().unwrap()],
+                max_requests_per_sec: Some(10),
                 requires_jwt: Some(true),
                 jwt_allowed_roles: Some(vec!["user".into()]),
             }],

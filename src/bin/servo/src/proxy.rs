@@ -36,6 +36,11 @@ impl ProxyHttp for Proxy {
         let req_header = session.req_header();
         let endpoint = req_header.uri.path();
 
+        let downstream_ip = match session.client_addr().map(|e| e.as_inet()) {
+            Some(Some(e)) => e.ip(),
+            _ => return Ok(true),
+        };
+
         let host_header = match DownStreamHost::try_from(req_header) {
             Ok(e) => e,
             Err(err) => {
@@ -60,6 +65,12 @@ impl ProxyHttp for Proxy {
             }
         };
         let upstream = route_match.value.clone();
+
+        if let Some(rate_limiter) = &upstream.rate_limiter
+            && rate_limiter.rate_limit(&downstream_ip)
+        {
+            return Ok(true);
+        }
 
         let after_filter_ctx = AfterFilterCTX {
             server: server.clone(),
@@ -87,7 +98,7 @@ impl ProxyHttp for Proxy {
             .load_balancer
             .select(b"", 256)
             .ok_or_else(|| {
-                error!("falied to select proxypass / backend / upstream");
+                error!("failed to select proxypass / backend / upstream");
                 Error::explain(HTTPStatus(500), "Server is unavailable")
             })?;
 
