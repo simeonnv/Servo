@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use matchit::Router;
@@ -35,6 +36,11 @@ impl Server {
                 .max_requests_per_sec
                 .map(|e| Arc::new(RateLimiter::new(e as isize)));
 
+            let mut blacklisted_endpoints = HashSet::new();
+            for blacklisted_endpoint in location_toml.blacklisted_endpoints.clone() {
+                blacklisted_endpoints.insert(blacklisted_endpoint);
+            }
+
             for endpoint in location_toml.endpoints.clone() {
                 let proxy_pass = ProxyPass::try_from(location_toml)?;
                 let url_concat_suffix = compute_base_endpoint(&endpoint);
@@ -48,10 +54,12 @@ impl Server {
                     });
 
                 let rate_limiter = rate_limiter.clone();
+                let blacklisted_endpoints = blacklisted_endpoints.clone();
                 let upstream = Upstream {
                     url_concat_suffix,
                     proxy_pass,
                     rate_limiter,
+                    blacklisted_endpoints,
                     auth: upstream_auth,
                 };
 

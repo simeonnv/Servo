@@ -38,13 +38,16 @@ impl ProxyHttp for Proxy {
 
         let downstream_ip = match session.client_addr().map(|e| e.as_inet()) {
             Some(Some(e)) => e.ip(),
-            _ => return Ok(true),
+            _ => {
+                debug!("there is no ip/valid ip in header");
+                return Ok(true);
+            }
         };
 
         let host_header = match DownStreamHost::try_from(req_header) {
             Ok(e) => e,
             Err(err) => {
-                info!("unable to parse DownStreamHost => {err}");
+                debug!("unable to parse DownStreamHost => {err}");
                 return Ok(true);
             }
         };
@@ -52,7 +55,7 @@ impl ProxyHttp for Proxy {
         let server = match self.server_map.routes.get(&host_header) {
             Some(e) => e,
             None => {
-                info!("unable to map the host header to a actual server!");
+                debug!("unable to map the host header to a actual server!");
                 return Ok(true);
             }
         };
@@ -60,7 +63,7 @@ impl ProxyHttp for Proxy {
         let route_match = match server.routes.at(endpoint) {
             Ok(e) => e,
             Err(err) => {
-                info!("endpoint / path doesnt map to a upstream / proxy pass: {err}");
+                debug!("endpoint / path doesnt map to a upstream / proxy pass: {err}");
                 return Ok(true);
             }
         };
@@ -69,6 +72,12 @@ impl ProxyHttp for Proxy {
         if let Some(rate_limiter) = &upstream.rate_limiter
             && rate_limiter.rate_limit(&downstream_ip)
         {
+            debug!("request blocked bc ip: {downstream_ip} is ratelimited");
+            return Ok(true);
+        }
+
+        if upstream.blacklisted_endpoints.contains(endpoint) {
+            debug!("request blocked bc endpoint is in the blacklist!");
             return Ok(true);
         }
 
