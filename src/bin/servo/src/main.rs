@@ -10,6 +10,9 @@ mod proxy;
 
 pub mod proxy_ctx;
 
+mod authorize;
+pub use authorize::authorize;
+
 pub mod server_map;
 use server_map::ServerMap;
 

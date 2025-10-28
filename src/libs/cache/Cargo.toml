@@ -1,0 +1,10 @@
+[package]
+name = "servo_cache"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+redis = { workspace = true }
+tokio = { workspace = true }
+thiserror = { workspace = true }
+r2d2 = { workspace = true }

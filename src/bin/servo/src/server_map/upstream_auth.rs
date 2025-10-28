@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{collections::HashSet, sync::Arc};
 
 use crate::public_pem::PublicPemSync;
 
@@ -6,5 +6,5 @@ use crate::public_pem::PublicPemSync;
 pub struct UpstreamAuth {
     pub public_pem_sync: Arc<PublicPemSync>,
     pub jwt_required: bool,
-    pub jwt_auth_roles: Option<Vec<String>>,
+    pub jwt_auth_roles: Option<HashSet<String>>,
 }

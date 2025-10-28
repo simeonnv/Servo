@@ -45,12 +45,24 @@ impl Server {
                 let proxy_pass = ProxyPass::try_from(location_toml)?;
                 let url_concat_suffix = compute_base_endpoint(&endpoint);
 
+                let jwt_allowed_roles =
+                    location_toml
+                        .jwt_allowed_roles
+                        .as_ref()
+                        .map(|allowed_roles| {
+                            let mut jwt_allowed_roles = HashSet::new();
+                            for role in allowed_roles {
+                                jwt_allowed_roles.insert(role.to_owned());
+                            }
+                            jwt_allowed_roles
+                        });
+
                 let upstream_auth = public_key_sync
                     .as_ref()
                     .map(|public_pem_sync| UpstreamAuth {
                         public_pem_sync: public_pem_sync.clone(),
                         jwt_required: location_toml.requires_jwt.unwrap_or(false),
-                        jwt_auth_roles: location_toml.jwt_allowed_roles.clone(),
+                        jwt_auth_roles: jwt_allowed_roles,
                     });
 
                 let rate_limiter = rate_limiter.clone();

@@ -1,8 +1,9 @@
-use std::collections::HashSet;
 use std::time::Duration;
 
+use crate::authorize;
+use crate::proxy_ctx::{AfterFilterCTX, ProxyCTX};
+use crate::server_map::{DownStreamHost, ServerMap};
 use async_trait::async_trait;
-use chrono::Utc;
 use http::Uri;
 use log::{debug, error, info, warn};
 use pingora::ErrorType::HTTPStatus;
@@ -12,11 +13,6 @@ use pingora::{
     prelude::HttpPeer,
     proxy::{ProxyHttp, Session},
 };
-use servo_auth::jwt::Jwt;
-use servo_auth::jwt::algoritms::Rsa;
-
-use crate::proxy_ctx::{AfterFilterCTX, ProxyCTX};
-use crate::server_map::{DownStreamHost, ServerMap};
 
 pub struct Proxy {
     pub server_map: ServerMap,
@@ -136,77 +132,15 @@ impl ProxyHttp for Proxy {
 
         request.set_uri(uri);
 
-        let upstream_auth = match &ctx_after_filter.upstream.auth {
-            Some(e) => e,
-            None => return Ok(()),
-        };
-
-        if !upstream_auth.jwt_required {
-            return Ok(());
+        // please test this fuck ass chas po excel
+        if let Some(upstream_auth) = &ctx_after_filter.upstream.auth {
+            authorize(request, upstream_auth).map_err(|err| {
+                info!("jwt error: {err}");
+                Error::explain(HTTPStatus(401), "Unauthorized")
+            })?;
         }
 
-        let auth_header = request
-            .headers
-            .get("Authorization")
-            .ok_or_else(|| Error::explain(HTTPStatus(401), "Unauthorized"))?
-            .to_str()
-            .map_err(|_| Error::explain(HTTPStatus(401), "Unauthorized"))?;
-
-        let jwt = auth_header
-            .strip_prefix("Bearer ")
-            .ok_or_else(|| Error::explain(HTTPStatus(401), "Unauthorized"))?
-            .trim();
-        dbg!(jwt);
-
-        let public_pem = upstream_auth.public_pem_sync.get_public_pem();
-
-        let jwt = Jwt::<Rsa>::decode(jwt, public_pem.as_bytes()).map_err(|err| {
-            debug!("jwt decode error: {err}");
-            Error::explain(HTTPStatus(401), "Unauthorized")
-        })?;
-
-        let exp = jwt
-            .serialized_body
-            .get("exp")
-            .ok_or_else(|| Error::explain(HTTPStatus(401), "Unauthorized"))?
-            .as_u64()
-            .ok_or_else(|| Error::explain(HTTPStatus(401), "Unauthorized"))?;
-
-        let now = Utc::now().naive_utc().and_utc().timestamp() as u64;
-
-        if now > exp {
-            return Err(Error::explain(HTTPStatus(401), "expired token"));
-        }
-
-        let allowed_roles = match &upstream_auth.jwt_auth_roles {
-            Some(e) => e,
-            None => return Ok(()),
-        };
-
-        let roles = jwt
-            .serialized_body
-            .get("roles")
-            .ok_or_else(|| Error::explain(HTTPStatus(401), "Unauthorized"))?
-            .as_array()
-            .ok_or_else(|| Error::explain(HTTPStatus(401), "Unauthorized"))?;
-
-        let mut token_roles = HashSet::with_capacity(roles.len() * 2);
-        for role in roles {
-            let role = role.as_str();
-            let role = match role {
-                Some(e) => e,
-                None => continue,
-            };
-            token_roles.insert(role);
-        }
-
-        for allowed_role in allowed_roles {
-            if token_roles.contains(allowed_role.as_str()) {
-                return Ok(());
-            };
-        }
-
-        Err(Error::explain(HTTPStatus(401), "Unauthorized"))
+        Ok(())
     }
 
     async fn logging(
