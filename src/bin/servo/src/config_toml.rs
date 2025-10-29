@@ -15,7 +15,14 @@ pub struct ConfigToml {
 pub struct GatewayConfigToml {
     pub gateway_name: String,
     pub listens: Vec<SocketAddr>,
+    pub tls: Option<Vec<TLSToml>>,
     pub log_level: Level,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TLSToml {
+    pub cert_path: PathBuf,
+    pub key_path: PathBuf,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -78,6 +85,7 @@ impl Default for ConfigToml {
         let config = GatewayConfigToml {
             gateway_name: "give me a name vro".into(),
             listens: vec!["0.0.0.0:54321".parse().unwrap()],
+            tls: None,
             log_level: Level::Info,
         };
 

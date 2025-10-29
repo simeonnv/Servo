@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 async-trait = "0.1.89"
-pingora = { version = "0.6.0", features = ["lb"] }
+pingora = { version = "0.6.0", features = ["lb", "openssl"] }
 servo_toml = { workspace = true }
 log = { workspace = true }
 env_logger = { workspace = true }
@@ -20,3 +20,6 @@ reqwest = "0.12.24"
 servo_auth = { workspace = true }
 chrono = { workspace = true }
 pingora-limits = "0.6.0"
+openssl = "0.10"
+rustls-pemfile = "2.1.2"
+x509-parser = "0.18.0"

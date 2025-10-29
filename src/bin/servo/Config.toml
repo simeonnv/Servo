@@ -1,7 +1,7 @@
 [config]
 gateway_name = "give me a name vro"
 listens = ["0.0.0.0:54321"]
-log_level = "ERROR"
+log_level = "INFO"
 
 [[servers]]
 name = "test"
@@ -14,8 +14,8 @@ check_duration = 360_000
 [[servers.locations]]
 endpoints = ["/auth", "/auth/{*any}"]
 blacklisted_endpoints = ["/auth/public_pem"]
-# jwt_allowed_roles = ["user"]
-# requires_jwt = true
+jwt_allowed_roles = ["user"]
+requires_jwt = true
 max_requests_per_sec = 10
 proxy_passes = ["0.0.0.0:8989"]
 health_check = true

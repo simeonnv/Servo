@@ -7,7 +7,7 @@ use pingora::http::RequestHeader;
 use servo_auth::jwt::{Jwt, algoritms::Rsa};
 use thiserror::Error;
 
-pub fn authorize(
+pub fn jwt_authorize(
     req_header: &RequestHeader,
     upstream_auth: &UpstreamAuth,
 ) -> Result<(), AuthError> {

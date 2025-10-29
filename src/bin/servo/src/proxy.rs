@@ -1,6 +1,4 @@
-use std::time::Duration;
-
-use crate::authorize;
+use crate::jwt_authorize;
 use crate::proxy_ctx::{AfterFilterCTX, ProxyCTX};
 use crate::server_map::{DownStreamHost, ServerMap};
 use async_trait::async_trait;
@@ -13,6 +11,7 @@ use pingora::{
     prelude::HttpPeer,
     proxy::{ProxyHttp, Session},
 };
+use std::time::Duration;
 
 pub struct Proxy {
     pub server_map: ServerMap,
@@ -31,6 +30,8 @@ impl ProxyHttp for Proxy {
         // ctx.beta_user = check_beta_user(session.req_header());
         let req_header = session.req_header();
         let endpoint = req_header.uri.path();
+        // let nz = session.;s
+        // dbg!(nz);
 
         let downstream_ip = match session.client_addr().map(|e| e.as_inet()) {
             Some(Some(e)) => e.ip(),
@@ -95,7 +96,6 @@ impl ProxyHttp for Proxy {
         ctx: &mut Self::CTX,
     ) -> Result<Box<HttpPeer>> {
         let after_filter_ctx = ctx.after_filter.as_ref().unwrap();
-        // after_filter_ctx.
 
         let proxy_pass = after_filter_ctx
             .upstream
@@ -127,14 +127,12 @@ impl ProxyHttp for Proxy {
 
         let concat_path = concat_path(path, url_concat_suffix);
         let uri = Uri::builder().path_and_query(concat_path).build().unwrap();
-
         debug!("routed from path: {path}, to {uri}");
 
         request.set_uri(uri);
 
-        // please test this fuck ass chas po excel
         if let Some(upstream_auth) = &ctx_after_filter.upstream.auth {
-            authorize(request, upstream_auth).map_err(|err| {
+            jwt_authorize(request, upstream_auth).map_err(|err| {
                 info!("jwt error: {err}");
                 Error::explain(HTTPStatus(401), "Unauthorized")
             })?;

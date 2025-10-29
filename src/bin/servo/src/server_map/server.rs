@@ -1,9 +1,13 @@
 use std::collections::HashSet;
 use std::sync::Arc;
+use std::time::Duration;
 
+use log::error;
 use matchit::Router;
 use thiserror::Error;
+use tokio::time::sleep;
 
+use crate::public_pem::Error as PublicPemErr;
 use crate::server_map::proxy_pass::Error as ProxyPassError;
 use crate::server_map::{RateLimiter, Upstream, UpstreamAuth};
 use crate::{config_toml::ServerToml, public_pem::PublicPemSync, server_map::ProxyPass};
@@ -19,13 +23,23 @@ impl Server {
         let mut router = Router::new();
 
         let public_key_sync = if let Some(auth_toml) = &server_toml.auth {
-            Some(
-                PublicPemSync::init_auth_toml(auth_toml)
-                    .await
-                    .unwrap_or_else(|err| {
-                        panic!("Failed to build public pem synchronizer => {err}");
-                    }),
-            )
+            let public_pem_sync = loop {
+                let public_pem_sync = PublicPemSync::init_auth_toml(auth_toml).await;
+                let public_pem_sync = match public_pem_sync {
+                    Ok(e) => e,
+                    Err(PublicPemErr::FailedToFetchPublicPem(err)) => {
+                        error!(
+                            "failed to fetch public pem {err}, retrying in 10 secs, blocking till successfull"
+                        );
+                        sleep(Duration::from_secs(10)).await;
+                        continue;
+                    }
+                    Err(err) => panic!("failed to get public pem: {err}"),
+                };
+                break public_pem_sync;
+            };
+
+            Some(public_pem_sync)
         } else {
             None
         };
