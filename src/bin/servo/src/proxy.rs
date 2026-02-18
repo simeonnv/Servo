@@ -131,11 +131,34 @@ impl ProxyHttp for Proxy {
 
         request.set_uri(uri);
 
-        if let Some(upstream_auth) = &ctx_after_filter.upstream.auth {
-            jwt_authorize(request, upstream_auth).map_err(|err| {
+        if let Some(upstream_auth) = &ctx_after_filter.upstream.auth
+            && upstream_auth.jwt_required
+        {
+            let jwt = jwt_authorize(request, upstream_auth).map_err(|err| {
                 info!("jwt error: {err}");
                 Error::explain(HTTPStatus(401), "Unauthorized")
             })?;
+
+            use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+            use serde_json::Value;
+            use std::str::FromStr;
+            fn add_json_to_headers(headers: &mut HeaderMap, body: &Value) {
+                if let Some(obj) = body.as_object() {
+                    for (key, val) in obj {
+                        if let Ok(header_name) = HeaderName::from_str(key) {
+                            let val_str = match val {
+                                Value::String(s) => s.clone(),
+                                _ => val.to_string(),
+                            };
+
+                            if let Ok(header_val) = HeaderValue::from_str(&val_str) {
+                                headers.insert(header_name, header_val);
+                            }
+                        }
+                    }
+                }
+            }
+            add_json_to_headers(&mut request.headers, jwt.serialized_body);
         }
 
         Ok(())

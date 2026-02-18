@@ -10,11 +10,7 @@ use thiserror::Error;
 pub fn jwt_authorize(
     req_header: &RequestHeader,
     upstream_auth: &UpstreamAuth,
-) -> Result<(), AuthError> {
-    if !upstream_auth.jwt_required {
-        return Ok(());
-    }
-
+) -> Result<Jwt<Rsa>, AuthError> {
     let auth_header = req_header
         .headers
         .get("Authorization")
@@ -50,7 +46,7 @@ pub fn jwt_authorize(
 
     let allowed_roles = match &upstream_auth.jwt_auth_roles {
         Some(e) => e,
-        None => return Ok(()),
+        None => return Ok(jwt),
     };
 
     let roles = jwt
@@ -84,7 +80,7 @@ pub fn jwt_authorize(
         return Err(AuthError::InvalidJWT);
     }
 
-    Ok(())
+    Ok(jwt)
 }
 
 #[derive(Error, Debug)]
