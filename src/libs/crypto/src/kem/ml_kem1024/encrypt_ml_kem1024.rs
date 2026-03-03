@@ -5,10 +5,7 @@ use aes_gcm::{
 };
 use oqs::kem::{Algorithm, Kem};
 
-pub fn encrypt_ml_kem1024(
-    input: &Vec<u8>,
-    public_key: &Vec<u8>,
-) -> Result<(Vec<u8>, Vec<u8>), Error> {
+pub fn encrypt_ml_kem1024(input: &[u8], public_key: &[u8]) -> Result<(Vec<u8>, Vec<u8>), Error> {
     let kem_alg =
         Kem::new(Algorithm::MlKem1024).map_err(|e| Error::AlgorithmError(e.to_string()))?;
     let public_key = kem_alg
@@ -29,7 +26,7 @@ pub fn encrypt_ml_kem1024(
     let nonce = Nonce::from_slice(&nonce_bytes);
 
     let ciphertext = cipher
-        .encrypt(nonce, input.as_slice())
+        .encrypt(nonce, input)
         .map_err(|e| Error::EncryptionError(e.to_string()))?;
 
     let mut full_ciphertext = nonce_bytes.to_vec();

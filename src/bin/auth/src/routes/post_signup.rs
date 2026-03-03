@@ -70,8 +70,8 @@ pub async fn post_signup(
     let private_pem = key_pair_roller.get_private_key();
     let jwt = generate_jwt(account_id, vec!["user".into()], &private_pem)?;
 
-    return Ok(HttpResponse::Ok().json(Res {
+    Ok(HttpResponse::Ok().json(Res {
         status: "success",
         data: DataRes { refresh_token, jwt },
-    }));
+    }))
 }

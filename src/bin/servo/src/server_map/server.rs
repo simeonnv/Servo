@@ -43,7 +43,7 @@ impl Server {
         } else {
             None
         };
-        let public_key_sync = public_key_sync.map(|e| Arc::new(e));
+        let public_key_sync = public_key_sync.map(Arc::new);
 
         for location_toml in &server_toml.locations {
             let rate_limiter = location_toml

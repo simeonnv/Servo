@@ -5,8 +5,8 @@ use sqlx::{Pool, Postgres};
 use crate::{Error, tables::Accounts};
 
 pub async fn get_account_by_credentials_db(
-    username: &String,
-    password: &String,
+    username: &str,
+    password: &str,
     db_pool: &Pool<Postgres>,
 ) -> Result<Accounts, Error> {
     let db_res: Option<Accounts> = sqlx::query_as!(

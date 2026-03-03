@@ -9,7 +9,7 @@ pub fn read_or_create_toml<T: Serialize + for<'a> Deserialize<'a> + Default + Fo
     let toml = read_toml_file::<T>(location);
     match toml {
         Ok(e) => {
-            e.validate().map_err(|e| Error::TomlValidationError(e))?;
+            e.validate().map_err(Error::TomlValidationError)?;
             Ok(e)
         }
         Err(Error::FileSystemError(err)) => {

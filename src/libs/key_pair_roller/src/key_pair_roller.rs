@@ -63,7 +63,7 @@ impl KeyPairRoller {
 
         let task = tokio::spawn(background_key_pair_roller(
             generate_rsa_key_pair,
-            roll_interval.clone(),
+            roll_interval,
             public_key_tx,
             private_key_tx,
         ));

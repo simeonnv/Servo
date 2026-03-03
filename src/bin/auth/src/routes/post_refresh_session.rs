@@ -48,8 +48,8 @@ pub async fn post_refresh_session(
 
     let jwt = generate_jwt(token_data.account_id, vec!["user".into()], &private_pem)?;
 
-    return Ok(HttpResponse::Ok().json(Res {
+    Ok(HttpResponse::Ok().json(Res {
         status: "success",
         data: DataRes { jwt },
-    }));
+    }))
 }

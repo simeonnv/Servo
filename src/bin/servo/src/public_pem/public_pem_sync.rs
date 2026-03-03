@@ -49,7 +49,7 @@ impl PublicPemSync {
 
 impl PublicPemSync {
     pub async fn init_from_http_url(url: &Url, update_duration: Duration) -> Result<Self, Error> {
-        let public_pem = PublicPem::from_http_req(&url).await?;
+        let public_pem = PublicPem::from_http_req(url).await?;
         let (public_pem_sender, public_pem_reciever) = watch::channel(public_pem);
 
         let task_handle = tokio::spawn(background_public_pem_sync_url(

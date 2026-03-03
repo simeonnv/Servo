@@ -12,8 +12,8 @@ pub fn generate_ml_kem1024_key_pair() -> Result<KeyPair, Error> {
     let now = Utc::now().naive_utc();
     // kem_alg.
     let keypair = KeyPair {
-        public_key: public_key.into_vec(),
-        private_key: private_key.into_vec(),
+        public_key: public_key.into_vec().into_boxed_slice(),
+        private_key: private_key.into_vec().into_boxed_slice(),
         creation_time: now,
     };
 

@@ -22,6 +22,6 @@ pub fn generate_jwt(
         "typ": "JWT"
     });
 
-    let jwt = Jwt::<Rsa>::serialize(header, claims, &private_pem)?;
+    let jwt = Jwt::<Rsa>::serialize(header, claims, private_pem)?;
     Ok(jwt.encode_into())
 }

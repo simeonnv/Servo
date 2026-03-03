@@ -9,7 +9,7 @@ impl SigAlgoritm for Rsa {
         Ok(validate_rsa_sign(input, signature, public_pem)?)
     }
 
-    fn encode<'a>(input: &'a [u8], private_pem: &[u8]) -> Result<Box<[u8]>, Error> {
+    fn encode(input: &[u8], private_pem: &[u8]) -> Result<Box<[u8]>, Error> {
         use servo_crypto::sign::rsa::sign_rsa::sign_rsa;
         Ok(sign_rsa(input, private_pem)?)
     }

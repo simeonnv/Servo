@@ -3490,6 +3490,7 @@ dependencies = [
  "reqwest",
  "rustls-pemfile",
  "serde",
+ "serde_json",
  "servo_auth",
  "servo_toml",
  "thiserror 2.0.17",

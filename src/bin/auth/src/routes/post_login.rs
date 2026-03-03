@@ -66,8 +66,8 @@ pub async fn post_login(
 
     let jwt = generate_jwt(account.account_id, vec!["user".into()], &private_pem)?;
 
-    return Ok(HttpResponse::Ok().json(Res {
+    Ok(HttpResponse::Ok().json(Res {
         status: "success",
         data: DataRes { refresh_token, jwt },
-    }));
+    }))
 }

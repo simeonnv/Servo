@@ -9,7 +9,7 @@ impl SigAlgoritm for Falcon512 {
         Ok(validate_falcon512_sign(input, signature, public_pem)?)
     }
 
-    fn encode<'a>(input: &'a [u8], private_pem: &[u8]) -> Result<Box<[u8]>, Error> {
+    fn encode(input: &[u8], private_pem: &[u8]) -> Result<Box<[u8]>, Error> {
         use servo_crypto::sign::falcon512::sign_falcon512::sign_falcon512;
         Ok(sign_falcon512(input, private_pem)?)
     }

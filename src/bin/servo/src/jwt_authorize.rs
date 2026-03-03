@@ -14,13 +14,13 @@ pub fn jwt_authorize(
     let auth_header = req_header
         .headers
         .get("Authorization")
-        .ok_or_else(|| AuthError::InvalidAuthHeader)?
+        .ok_or(AuthError::InvalidAuthHeader)?
         .to_str()
         .map_err(|_| AuthError::InvalidAuthHeader)?;
 
     let jwt = auth_header
         .strip_prefix("Bearer ")
-        .ok_or_else(|| AuthError::InvalidAuthHeader)?
+        .ok_or(AuthError::InvalidAuthHeader)?
         .trim();
     dbg!(jwt);
 
@@ -34,9 +34,9 @@ pub fn jwt_authorize(
     let exp = jwt
         .serialized_body
         .get("exp")
-        .ok_or_else(|| AuthError::InvalidJWT)?
+        .ok_or(AuthError::InvalidJWT)?
         .as_u64()
-        .ok_or_else(|| AuthError::InvalidJWT)?;
+        .ok_or(AuthError::InvalidJWT)?;
 
     let now = Utc::now().naive_utc().and_utc().timestamp() as u64;
 
@@ -52,9 +52,9 @@ pub fn jwt_authorize(
     let roles = jwt
         .serialized_body
         .get("roles")
-        .ok_or_else(|| AuthError::InvalidJWT)?
+        .ok_or(AuthError::InvalidJWT)?
         .as_array()
-        .ok_or_else(|| AuthError::InvalidJWT)?;
+        .ok_or(AuthError::InvalidJWT)?;
 
     let mut token_roles = HashSet::with_capacity(roles.len() * 2);
     for role in roles {

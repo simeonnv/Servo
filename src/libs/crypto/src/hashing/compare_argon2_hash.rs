@@ -5,7 +5,7 @@ use argon2::{
 
 use crate::{ARGON2_PARAMS, Error};
 
-pub async fn compare_argon2_hash(input: &String, hash: &String) -> Result<bool, Error> {
+pub async fn compare_argon2_hash(input: &str, hash: &str) -> Result<bool, Error> {
     let argon2 = Argon2::new(Algorithm::Argon2id, Version::V0x13, ARGON2_PARAMS);
 
     let parsed_hash = PasswordHash::new(hash)?;

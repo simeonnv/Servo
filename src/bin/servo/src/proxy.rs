@@ -80,7 +80,7 @@ impl ProxyHttp for Proxy {
 
         let after_filter_ctx = AfterFilterCTX {
             server: server.clone(),
-            host_header: host_header,
+            host_header,
             upstream,
         };
 
@@ -139,28 +139,19 @@ impl ProxyHttp for Proxy {
                 Error::explain(HTTPStatus(401), "Unauthorized")
             })?;
 
-            use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
-            use serde_json::Value;
-            use std::str::FromStr;
-            fn add_json_to_headers(headers: &mut HeaderMap, body: &Value) {
-                if let Some(obj) = body.as_object() {
-                    for (key, val) in obj {
-                        if let Ok(header_name) = HeaderName::from_str(key) {
-                            let val_str = match val {
-                                Value::String(s) => s.clone(),
-                                _ => val.to_string(),
-                            };
+            if let Some(obj) = jwt.serialized_body.as_object() {
+                for (key, val) in obj {
+                    let val_str = match val {
+                        serde_json::Value::String(s) => s.clone(),
+                        _ => val.to_string(),
+                    };
 
-                            if let Ok(header_val) = HeaderValue::from_str(&val_str) {
-                                headers.insert(header_name, header_val);
-                            }
-                        }
+                    if let Err(e) = request.insert_header(key.to_owned(), &val_str) {
+                        warn!("Failed to insert header {key}: {e}");
                     }
                 }
             }
-            add_json_to_headers(&mut request.headers, jwt.serialized_body);
         }
-
         Ok(())
     }
 
@@ -198,7 +189,7 @@ fn concat_path(path: &str, suffix: &str) -> String {
     if path.starts_with(suffix) {
         let rest = path.strip_prefix(suffix).unwrap_or("");
         if rest.starts_with("/") {
-            format!("{}", rest)
+            rest.to_string()
         } else {
             format!("/{}", rest)
         }

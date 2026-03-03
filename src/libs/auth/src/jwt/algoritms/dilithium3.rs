@@ -9,7 +9,7 @@ impl SigAlgoritm for Dilithium3 {
         Ok(validate_dilithium3_sign(input, signature, public_pem)?)
     }
 
-    fn encode<'a>(input: &'a [u8], private_pem: &[u8]) -> Result<Box<[u8]>, Error> {
+    fn encode(input: &[u8], private_pem: &[u8]) -> Result<Box<[u8]>, Error> {
         use servo_crypto::sign::dilithium3::sign_dilithium3::sign_dilithium3;
         Ok(sign_dilithium3(input, private_pem)?)
     }

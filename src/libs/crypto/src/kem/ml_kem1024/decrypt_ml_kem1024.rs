@@ -4,9 +4,9 @@ use oqs::kem::{Algorithm, Kem};
 use crate::Error;
 
 pub fn decrypt_ml_kem1024(
-    ciphertext: &Vec<u8>,
-    kem_ciphertext: &Vec<u8>,
-    private_key: &Vec<u8>,
+    ciphertext: &[u8],
+    kem_ciphertext: &[u8],
+    private_key: &[u8],
 ) -> Result<Vec<u8>, Error> {
     let kem_alg =
         Kem::new(Algorithm::MlKem1024).map_err(|e| Error::AlgorithmError(e.to_string()))?;
