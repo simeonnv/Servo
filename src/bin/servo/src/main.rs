@@ -1,3 +1,6 @@
+use std::path::PathBuf;
+
+use clap::Parser;
 use env_logger::Env;
 use log::{info, warn};
 use openssl::ssl::{SslAlert, SslRef};
@@ -24,8 +27,17 @@ pub mod public_pem;
 
 pub mod tls;
 
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    #[arg(short, long, default_value = "./Servo.toml")]
+    config: PathBuf,
+}
+
 fn main() -> Result<(), std::io::Error> {
-    let config_toml = read_or_create_toml::<ConfigToml>("./Servo.toml")
+    let args = Args::parse();
+
+    let config_toml = read_or_create_toml::<ConfigToml>(&args.config)
         .unwrap_or_else(|err| panic!("config toml load err => {err}"));
     env_logger::Builder::from_env(
         Env::default().default_filter_or(config_toml.config.log_level.as_str()),
