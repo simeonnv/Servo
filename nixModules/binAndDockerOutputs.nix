@@ -19,8 +19,8 @@ in {
     };
 
     images = {
-      auth = mkRustDocker pkgs "auth-server" "auth" oxalateApps.harvester ["8989"];
-      servo = mkRustDocker pkgs "servo-server" "servo" oxalateApps.outlet ["18888"];
+      auth = mkRustDocker pkgs "auth-server" "auth" oxalateApps.auth ["8989"];
+      servo = mkRustDocker pkgs "servo-server" "servo" oxalateApps.servo ["18888"];
     };
   in {
     packages = {
@@ -30,7 +30,7 @@ in {
       auth-image = images.auth;
       servo-image = images.servo;
 
-      default = oxalateApps.indexer;
+      default = oxalateApps.servo;
     };
 
     apps = {
