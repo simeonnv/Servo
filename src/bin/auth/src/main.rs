@@ -35,9 +35,9 @@ async fn main() -> std::io::Result<()> {
     let db_pool = create_postgres_pool(
         &ENVVARS.postgres_user,
         &ENVVARS.postgres_password,
-        &ENVVARS.db_address,
+        &ENVVARS.db_dns,
         ENVVARS.db_port,
-        &ENVVARS.postgres_name,
+        &ENVVARS.postgres_db,
         ENVVARS.pool_max_conn,
     )
     .await

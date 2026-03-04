@@ -14,8 +14,8 @@ pub struct EnvVars {
     #[envconfig(from = "AUTH_PORT", default = "8989")]
     pub auth_port: u32,
 
-    #[envconfig(from = "POSTGRES_NAME")]
-    pub postgres_name: String,
+    #[envconfig(from = "POSTGRES_DB")]
+    pub postgres_db: String,
 
     #[envconfig(from = "POSTGRES_USER")]
     pub postgres_user: String,
@@ -23,8 +23,8 @@ pub struct EnvVars {
     #[envconfig(from = "POSTGRES_PASSWORD")]
     pub postgres_password: String,
 
-    #[envconfig(from = "DB_ADDRESS")]
-    pub db_address: String,
+    #[envconfig(from = "DB_DNS")]
+    pub db_dns: String,
 
     #[envconfig(from = "DB_PORT", default = "5432")]
     pub db_port: u16,
