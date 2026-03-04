@@ -15,7 +15,7 @@ pub async fn create_postgres_pool(
         "postgres://{}:{}@{}:{}/{}",
         postgres_user, postgres_password, db_address, db_port, postgres_name
     );
-    info!("creating a connection with db: {}", postgres_name);
+    info!("creating a connection with db: {postgres_name} with url: {db_url}",);
 
     let pool = PgPoolOptions::new()
         .max_connections(max_conn)
