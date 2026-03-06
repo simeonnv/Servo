@@ -107,15 +107,6 @@ impl FormatValidate for ConfigToml {
             return Err("2 or more servers have the same name!".into());
         }
 
-        let all_downstream_hosts: Vec<String> = self
-            .servers
-            .iter()
-            .flat_map(|upstream| upstream.downstream_hosts.clone())
-            .collect();
-        if has_duplicates(&all_downstream_hosts) {
-            return Err("Duplicate downstream hosts found across servers!".into());
-        }
-
         let all_location_endpoint_patterns: Vec<String> = self
             .servers
             .iter()
