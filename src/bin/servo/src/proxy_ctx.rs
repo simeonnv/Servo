@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+use servo_auth::jwt::{Jwt, algoritms::Rsa};
+
 use crate::server_map::{DownStreamHost, Server, Upstream};
 
 #[derive(Debug)]
@@ -24,4 +26,5 @@ pub struct AfterFilterCTX {
     pub server: Arc<Server>,
     pub host_header: DownStreamHost,
     pub upstream: Arc<Upstream>,
+    pub jwt: Option<Jwt<Rsa>>,
 }

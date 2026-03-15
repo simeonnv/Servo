@@ -30,18 +30,26 @@ pub struct ServerToml {
     pub name: String,
     pub downstream_hosts: Vec<String>,
     pub auth: Option<AuthToml>,
+    pub cache: Option<CacheToml>,
     pub locations: Vec<LocationToml>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CacheToml {
+    pub url: Url,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LocationToml {
     pub endpoints: Vec<String>,
-    pub blacklisted_endpoints: Vec<String>,
+    pub blacklisted_endpoints: Option<Vec<String>>,
     pub max_requests_per_sec: Option<usize>,
     pub proxy_passes: Vec<SocketAddr>,
     pub health_check: Option<bool>,
     pub health_check_frequency: Option<u64>,
     pub requires_jwt: Option<bool>,
+    pub cacheable: Option<bool>,
+    pub cache_time_secs: Option<u64>,
     pub jwt_allowed_roles: Option<Vec<String>>,
 }
 
@@ -72,14 +80,19 @@ impl Default for ConfigToml {
             }),
             locations: vec![LocationToml {
                 endpoints: vec!["/".into(), "/{*any}".into()],
-                blacklisted_endpoints: vec!["/auth/public_pem".into()],
+                blacklisted_endpoints: Some(vec!["/auth/public_pem".into()]),
                 health_check: Some(true),
                 health_check_frequency: Some(3000),
                 proxy_passes: vec!["192.168.1.103:8080".parse().unwrap()],
                 max_requests_per_sec: Some(10),
                 requires_jwt: Some(true),
                 jwt_allowed_roles: Some(vec!["user".into()]),
+                cacheable: Some(true),
+                cache_time_secs: Some(60 * 60),
             }],
+            cache: Some(CacheToml {
+                url: Url::parse("redis://0.0.0.0:6379").unwrap(),
+            }),
         };
 
         let config = GatewayConfigToml {

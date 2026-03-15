@@ -27,6 +27,8 @@ pub mod public_pem;
 
 pub mod tls;
 
+pub mod redis_cache;
+
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {

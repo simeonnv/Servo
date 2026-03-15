@@ -2,13 +2,17 @@ use std::collections::HashSet;
 use std::sync::Arc;
 use std::time::Duration;
 
+use fred::prelude::{ClientLike, Config, EventInterface, TcpConfig};
+use fred::types::Builder;
 use log::error;
 use matchit::Router;
 use thiserror::Error;
 use tokio::time::sleep;
 
 use crate::public_pem::Error as PublicPemErr;
+use crate::redis_cache::RedisCache;
 use crate::server_map::proxy_pass::Error as ProxyPassError;
+use crate::server_map::upstream::UpstreamCache;
 use crate::server_map::{RateLimiter, Upstream, UpstreamAuth};
 use crate::{config_toml::ServerToml, public_pem::PublicPemSync, server_map::ProxyPass};
 
@@ -22,28 +26,60 @@ impl Server {
     pub async fn from_server_toml(server_toml: &ServerToml) -> Result<Self, Error> {
         let mut router = Router::new();
 
-        let public_key_sync = if let Some(auth_toml) = &server_toml.auth {
-            let public_pem_sync = loop {
-                let public_pem_sync = PublicPemSync::init_auth_toml(auth_toml).await;
-                let public_pem_sync = match public_pem_sync {
-                    Ok(e) => e,
-                    Err(PublicPemErr::FailedToFetchPublicPem(err)) => {
-                        error!(
-                            "failed to fetch public pem {err}, retrying in 10 secs, blocking till successfull"
-                        );
-                        sleep(Duration::from_secs(10)).await;
-                        continue;
-                    }
-                    Err(err) => panic!("failed to get public pem: {err}"),
+        let public_key_sync = match &server_toml.auth {
+            Some(auth_toml) => {
+                let public_pem_sync = loop {
+                    let public_pem_sync = PublicPemSync::init_auth_toml(auth_toml).await;
+                    let public_pem_sync = match public_pem_sync {
+                        Ok(e) => e,
+                        Err(PublicPemErr::FailedToFetchPublicPem(err)) => {
+                            error!(
+                                "failed to fetch public pem {err}, retrying in 10 secs, blocking till successfull"
+                            );
+                            sleep(Duration::from_secs(10)).await;
+                            continue;
+                        }
+                        Err(err) => panic!("failed to get public pem: {err}"),
+                    };
+                    break public_pem_sync;
                 };
-                break public_pem_sync;
-            };
 
-            Some(public_pem_sync)
-        } else {
-            None
+                Some(Arc::new(public_pem_sync))
+            }
+            None => None,
         };
-        let public_key_sync = public_key_sync.map(Arc::new);
+
+        let redis_pool = match server_toml.cache {
+            Some(ref e) => {
+                let config = Config::from_url(e.url.as_str()).expect("invalid cache url");
+
+                let redis_pool = Builder::from_config(config)
+                    .with_connection_config(|config| {
+                        config.connection_timeout = Duration::from_secs(5);
+                        config.tcp = TcpConfig {
+                            nodelay: Some(true),
+                            ..Default::default()
+                        };
+                    })
+                    .build()
+                    .map_err(|e| Error::RedisClient(e.to_string()))?;
+
+                redis_pool
+                    .init()
+                    .await
+                    .map_err(|e| Error::RedisConn(e.to_string()))?;
+
+                redis_pool.on_error(|(error, server)| async move {
+                    println!("Redis connection error {:?}: {:?}", server, error);
+                    Ok(())
+                });
+
+                let cache = Box::leak(Box::new(RedisCache::new(redis_pool))) as &'static RedisCache;
+
+                Some(cache)
+            }
+            None => None,
+        };
 
         for location_toml in &server_toml.locations {
             let rate_limiter = location_toml
@@ -51,7 +87,11 @@ impl Server {
                 .map(|e| Arc::new(RateLimiter::new(e as isize)));
 
             let mut blacklisted_endpoints = HashSet::new();
-            for blacklisted_endpoint in location_toml.blacklisted_endpoints.clone() {
+            for blacklisted_endpoint in location_toml
+                .blacklisted_endpoints
+                .clone()
+                .unwrap_or_default()
+            {
                 blacklisted_endpoints.insert(blacklisted_endpoint);
             }
 
@@ -79,14 +119,27 @@ impl Server {
                         jwt_auth_roles: jwt_allowed_roles,
                     });
 
+                let redis_pool = if location_toml.cacheable.unwrap_or(false) {
+                    Some(redis_pool)
+                } else {
+                    None
+                };
+                let redis_pool = redis_pool.flatten();
+
                 let rate_limiter = rate_limiter.clone();
                 let blacklisted_endpoints = blacklisted_endpoints.clone();
+                let upstream_cache = redis_pool.map(|e| UpstreamCache {
+                    cache: e,
+                    cache_time_secs: location_toml.cache_time_secs.unwrap_or(60 * 60),
+                });
+
                 let upstream = Upstream {
                     url_concat_suffix,
                     proxy_pass,
                     rate_limiter,
                     blacklisted_endpoints,
                     auth: upstream_auth,
+                    cache: upstream_cache,
                 };
 
                 router
@@ -111,6 +164,12 @@ pub enum Error {
 
     #[error("Failed to insert into router => {0}")]
     FailedToInsertIntoRouter(String),
+
+    #[error("Failed to create a redis client => {0}")]
+    RedisClient(String),
+
+    #[error("Failed to get redis connection {0}")]
+    RedisConn(String),
 }
 
 fn compute_base_endpoint(pattern: &str) -> String {
