@@ -17,6 +17,7 @@ pub struct Upstream {
     pub rate_limiter: Option<Arc<RateLimiter>>,
 }
 
+#[derive(Debug)]
 pub struct UpstreamCache {
     pub cache: &'static RedisCache,
     pub cache_time_secs: u64,
