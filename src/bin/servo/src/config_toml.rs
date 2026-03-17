@@ -44,7 +44,7 @@ pub struct LocationToml {
     pub endpoints: Vec<String>,
     pub blacklisted_endpoints: Option<Vec<String>>,
     pub max_requests_per_sec: Option<usize>,
-    pub proxy_passes: Vec<SocketAddr>,
+    pub proxy_passes: Vec<String>,
     pub health_check: Option<bool>,
     pub health_check_frequency: Option<u64>,
     pub requires_jwt: Option<bool>,
