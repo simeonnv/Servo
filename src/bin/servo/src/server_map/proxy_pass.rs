@@ -10,7 +10,7 @@ use crate::config_toml::LocationToml;
 
 #[derive(Clone)]
 pub struct ProxyPass {
-    pub addrs: Vec<SocketAddr>,
+    pub addrs: Vec<String>,
     pub load_balancer: Arc<LoadBalancer<RoundRobin>>,
 }
 
