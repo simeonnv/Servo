@@ -128,13 +128,14 @@ impl ProxyHttp for Proxy {
         } else {
             None
         };
+        session.enable_retry_buffering();
 
         let body = session.read_request_body().await?;
         if let Some(data) = body {
             let mut hasher = DefaultHasher::new();
             hasher.write(&data);
             ctx.body_hash = Some(hasher.finish());
-        };
+        }
 
         let after_filter_ctx = AfterFilterCTX {
             server: server.clone(),
