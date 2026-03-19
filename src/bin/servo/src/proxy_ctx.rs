@@ -8,14 +8,14 @@ use crate::server_map::{DownStreamHost, Server, Upstream};
 #[derive(Debug)]
 pub struct ProxyCTX {
     pub after_filter: Option<AfterFilterCTX>,
-    pub body_hasher: Option<DefaultHasher>,
+    pub body_hash: Option<u64>,
 }
 
 impl ProxyCTX {
     pub fn new() -> Self {
         Self {
             after_filter: None,
-            body_hasher: None,
+            body_hash: None,
         }
     }
 }

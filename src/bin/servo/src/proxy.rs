@@ -129,6 +129,13 @@ impl ProxyHttp for Proxy {
             None
         };
 
+        let body = session.read_request_body().await?;
+        if let Some(data) = body {
+            let mut hasher = DefaultHasher::new();
+            hasher.write(&data);
+            ctx.body_hash = Some(hasher.finish());
+        };
+
         let after_filter_ctx = AfterFilterCTX {
             server: server.clone(),
             host_header,
@@ -139,35 +146,6 @@ impl ProxyHttp for Proxy {
         ctx.after_filter = Some(after_filter_ctx);
 
         Ok(false)
-    }
-
-    async fn request_body_filter(
-        &self,
-        _session: &mut Session,
-        body: &mut Option<Bytes>,
-        end_of_stream: bool,
-        ctx: &mut Self::CTX,
-    ) -> Result<()> {
-        if end_of_stream {
-            return Ok(());
-        }
-
-        if let Some(chunk) = body
-            && !chunk.is_empty()
-        {
-            match ctx.body_hasher {
-                Some(ref mut e) => {
-                    e.write(chunk);
-                }
-                None => {
-                    let mut hasher = DefaultHasher::new();
-                    hasher.write(chunk);
-                    ctx.body_hasher = Some(hasher);
-                }
-            }
-        }
-
-        Ok(())
     }
 
     // extracts a good proxy pass from the load balancer
@@ -250,16 +228,14 @@ impl ProxyHttp for Proxy {
             .map(|e| String::from_utf8_lossy(&e.body).into_owned())
             .unwrap_or("None".into());
 
-        let body_hash = match ctx.body_hasher {
-            Some(ref e) => e.finish().to_string(),
+        let body_hash = match ctx.body_hash {
+            Some(ref e) => e.to_string(),
             None => "no_body".into(),
         };
 
-        Ok(CacheKey::new(
-            String::new(),
-            format!("{host}:{path_and_query}:{jwt_body}:{body_hash}"),
-            String::new(),
-        ))
+        let key = format!("{host}:{path_and_query}:{jwt_body}:{body_hash}");
+        dbg!(&key);
+        Ok(CacheKey::new(String::new(), key, String::new()))
     }
 
     fn response_cache_filter(
