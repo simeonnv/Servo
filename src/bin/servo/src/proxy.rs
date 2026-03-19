@@ -19,6 +19,7 @@ use pingora::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::hash::{DefaultHasher, Hash, Hasher};
 use std::time::{Duration, SystemTime};
 
 pub struct Proxy {
@@ -140,6 +141,35 @@ impl ProxyHttp for Proxy {
         Ok(false)
     }
 
+    async fn request_body_filter(
+        &self,
+        _session: &mut Session,
+        body: &mut Option<Bytes>,
+        end_of_stream: bool,
+        ctx: &mut Self::CTX,
+    ) -> Result<()> {
+        if end_of_stream {
+            return Ok(());
+        }
+
+        if let Some(chunk) = body
+            && !chunk.is_empty()
+        {
+            match ctx.body_hasher {
+                Some(ref mut e) => {
+                    e.write(chunk);
+                }
+                None => {
+                    let mut hasher = DefaultHasher::new();
+                    hasher.write(chunk);
+                    ctx.body_hasher = Some(hasher);
+                }
+            }
+        }
+
+        Ok(())
+    }
+
     // extracts a good proxy pass from the load balancer
     async fn upstream_peer(
         &self,
@@ -220,9 +250,14 @@ impl ProxyHttp for Proxy {
             .map(|e| String::from_utf8_lossy(&e.body).into_owned())
             .unwrap_or("None".into());
 
+        let body_hash = match ctx.body_hasher {
+            Some(ref e) => e.finish().to_string(),
+            None => "no_body".into(),
+        };
+
         Ok(CacheKey::new(
             String::new(),
-            format!("{host}:{path_and_query}:{jwt_body}"),
+            format!("{host}:{path_and_query}:{jwt_body}:{body_hash}"),
             String::new(),
         ))
     }

@@ -1,5 +1,6 @@
-use std::sync::Arc;
+use std::{hash::DefaultHasher, sync::Arc};
 
+use bytes::BytesMut;
 use servo_auth::jwt::{Jwt, algoritms::Rsa};
 
 use crate::server_map::{DownStreamHost, Server, Upstream};
@@ -7,11 +8,15 @@ use crate::server_map::{DownStreamHost, Server, Upstream};
 #[derive(Debug)]
 pub struct ProxyCTX {
     pub after_filter: Option<AfterFilterCTX>,
+    pub body_hasher: Option<DefaultHasher>,
 }
 
 impl ProxyCTX {
     pub fn new() -> Self {
-        Self { after_filter: None }
+        Self {
+            after_filter: None,
+            body_hasher: None,
+        }
     }
 }
 
