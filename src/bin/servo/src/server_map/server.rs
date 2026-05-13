@@ -97,7 +97,7 @@ impl Server {
 
             for endpoint in location_toml.endpoints.clone() {
                 let proxy_pass = ProxyPass::try_from(location_toml)?;
-                let url_concat_suffix = compute_base_endpoint(&endpoint);
+                let url_concat_suffix = compute_base_endpoint(&endpoint.path);
 
                 let jwt_allowed_roles =
                     location_toml
@@ -140,10 +140,11 @@ impl Server {
                     blacklisted_endpoints,
                     auth: upstream_auth,
                     cache: upstream_cache,
+                    reroute_template: endpoint.reroute,
                 };
 
                 router
-                    .insert(endpoint, Arc::new(upstream))
+                    .insert(endpoint.path, Arc::new(upstream))
                     .map_err(|err| Error::FailedToInsertIntoRouter(err.to_string()))?;
             }
         }
@@ -172,6 +173,28 @@ pub enum Error {
     RedisConn(String),
 }
 
+/// Extracts the static base portion of a URL pattern string.
+///
+/// This function iterates through a path separated by forward slashes (`/`)
+/// and collects segments until it encounters a dynamic parameter (indicated
+/// by a segment starting with `{`).
+///
+/// ### Behavior:
+/// * Returns `/` if the pattern is empty or starts immediately with a parameter.
+/// * Trims empty segments (e.g., double slashes `//`).
+/// * Joins the static segments into a single path string prefixed with `/`.
+///
+/// # Arguments
+/// * `pattern` - A string slice representing the URL path (e.g., "api/v1/users/{id}").
+///
+/// # Examples
+/// ```
+/// let base = compute_base_endpoint("api/v1/users/{id}");
+/// assert_eq!(base, "/api/v1/users");
+///
+/// let root = compute_base_endpoint("{id}");
+/// assert_eq!(root, "/");
+/// ```
 fn compute_base_endpoint(pattern: &str) -> String {
     let parts: Vec<&str> = pattern.split('/').collect();
     let mut base_parts = Vec::new();

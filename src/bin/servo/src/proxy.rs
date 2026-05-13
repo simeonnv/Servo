@@ -70,6 +70,13 @@ impl ProxyHttp for Proxy {
                 return Ok(true);
             }
         };
+        let path_params = {
+            let mut params = HashMap::new();
+            for (key, value) in route_match.params.iter() {
+                params.insert(key.to_string(), value.to_string());
+            }
+            params
+        };
         let upstream = route_match.value.clone();
 
         if let Some(rate_limiter) = &upstream.rate_limiter
@@ -142,6 +149,7 @@ impl ProxyHttp for Proxy {
             host_header,
             upstream,
             jwt,
+            path_params,
         };
 
         ctx.after_filter = Some(after_filter_ctx);
@@ -181,13 +189,34 @@ impl ProxyHttp for Proxy {
         request: &mut RequestHeader,
         ctx: &mut Self::CTX,
     ) -> Result<()> {
-        let path = request.uri.path();
         let ctx_after_filter = ctx.after_filter.as_ref().unwrap();
-        let url_concat_suffix = &ctx_after_filter.upstream.url_concat_suffix;
+        let upstream = &ctx_after_filter.upstream;
 
-        let concat_path = concat_path(path, url_concat_suffix);
-        let uri = Uri::builder().path_and_query(concat_path).build().unwrap();
-        debug!("routed from path: {path}, to {uri}");
+        let target_path = if let Some(template) = &upstream.reroute_template {
+            let mut interpolated = template.clone();
+            for (key, value) in &ctx_after_filter.path_params {
+                interpolated = interpolated.replace(&format!("{{{}}}", key), value);
+                interpolated = interpolated.replace(&format!("{{*{}}}", key), value);
+            }
+            interpolated
+        } else {
+            let path = request.uri.path();
+            let url_concat_suffix = &upstream.url_concat_suffix;
+            concat_path(path, url_concat_suffix)
+        };
+
+        let final_path_and_query = if let Some(query) = request.uri.query() {
+            format!("{}?{}", target_path, query)
+        } else {
+            target_path
+        };
+
+        let uri = Uri::builder()
+            .path_and_query(final_path_and_query)
+            .build()
+            .unwrap();
+
+        debug!("Dynamic reroute resolved to: {uri}");
 
         request.set_uri(uri);
         Ok(())

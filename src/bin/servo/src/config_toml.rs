@@ -40,8 +40,14 @@ pub struct CacheToml {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct EndpointToml {
+    pub path: String,
+    pub reroute: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LocationToml {
-    pub endpoints: Vec<String>,
+    pub endpoints: Vec<EndpointToml>,
     pub blacklisted_endpoints: Option<Vec<String>>,
     pub max_requests_per_sec: Option<usize>,
     pub proxy_passes: Vec<String>,
@@ -79,7 +85,16 @@ impl Default for ConfigToml {
                 check_duration: 10_000,
             }),
             locations: vec![LocationToml {
-                endpoints: vec!["/".into(), "/{*any}".into()],
+                endpoints: vec![
+                    EndpointToml {
+                        path: "/".into(),
+                        reroute: None,
+                    },
+                    EndpointToml {
+                        path: "/{*any}".into(),
+                        reroute: None,
+                    },
+                ],
                 blacklisted_endpoints: Some(vec!["/auth/public_pem".into()]),
                 health_check: Some(true),
                 health_check_frequency: Some(3000),
@@ -129,31 +144,34 @@ impl FormatValidate for ConfigToml {
             return Err("Duplicate downstream hosts found across servers!".into());
         }
 
-        let all_location_endpoint_patterns: Vec<String> = self
+        let all_location_endpoint_patterns: Vec<EndpointToml> = self
             .servers
             .iter()
             .flat_map(|upstream| upstream.locations.iter())
             .flat_map(|location| location.endpoints.iter())
             .cloned()
             .collect();
+
         if !all_location_endpoint_patterns
             .iter()
-            .all(|endpoint| endpoint.starts_with('/'))
+            .all(|endpoint| endpoint.path.starts_with('/'))
         {
             return Err("Not all endpoint patterns start with '/'!".into());
         }
 
-        for upstream in &self.servers {
-            let endpoints: Vec<String> = upstream
+        for server_toml in &self.servers {
+            let endpoints: Vec<String> = server_toml
                 .locations
                 .iter()
                 .flat_map(|loc| loc.endpoints.iter())
+                .map(|e| &e.path)
                 .cloned()
                 .collect();
+
             if has_duplicates(&endpoints) {
                 return Err(format!(
                     "Duplicate endpoint patterns found in upstream '{}'",
-                    upstream.name
+                    server_toml.name
                 ));
             }
         }

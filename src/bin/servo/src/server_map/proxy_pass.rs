@@ -3,7 +3,7 @@ use pingora::{
     lb::LoadBalancer,
     prelude::{RoundRobin, TcpHealthCheck, background_service},
 };
-use std::{net::SocketAddr, sync::Arc, time::Duration};
+use std::{sync::Arc, time::Duration};
 use thiserror::Error;
 
 use crate::config_toml::LocationToml;
@@ -29,7 +29,15 @@ impl TryFrom<&LocationToml> for ProxyPass {
                 location_toml.health_check_frequency.unwrap_or(3000),
             ));
             let background = background_service(
-                &format!("health check: {}", location_toml.endpoints.join(", ")),
+                &format!(
+                    "health check: {}",
+                    location_toml
+                        .endpoints
+                        .iter()
+                        .map(|e| e.path.clone())
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                ),
                 proxy_passes_loadbalancer,
             );
             background.task()

@@ -10,6 +10,7 @@ use crate::{
 #[derive(Debug)]
 pub struct Upstream {
     pub url_concat_suffix: String,
+    pub reroute_template: Option<String>,
     pub proxy_pass: ProxyPass,
     pub auth: Option<UpstreamAuth>,
     pub cache: Option<UpstreamCache>,

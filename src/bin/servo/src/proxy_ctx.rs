@@ -1,4 +1,4 @@
-use std::{hash::DefaultHasher, sync::Arc};
+use std::{collections::HashMap, hash::DefaultHasher, sync::Arc};
 
 use bytes::BytesMut;
 use servo_auth::jwt::{Jwt, algoritms::Rsa};
@@ -31,5 +31,6 @@ pub struct AfterFilterCTX {
     pub server: Arc<Server>,
     pub host_header: DownStreamHost,
     pub upstream: Arc<Upstream>,
+    pub path_params: HashMap<String, String>,
     pub jwt: Option<Jwt<Rsa>>,
 }
