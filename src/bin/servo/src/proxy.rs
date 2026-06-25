@@ -45,6 +45,17 @@ impl ProxyHttp for Proxy {
         };
 
         let req_header = session.req_header_mut();
+
+        let gateway_headers: Vec<String> = req_header
+            .headers
+            .keys()
+            .map(|k| k.as_str().to_string())
+            .filter(|k| k.to_lowercase().starts_with("x-gateway-"))
+            .collect();
+        for header_name in gateway_headers {
+            let _ = req_header.remove_header(&header_name);
+        }
+
         let endpoint = req_header.uri.path();
 
         let host_header = match DownStreamHost::try_from(req_header as &RequestHeader) {
