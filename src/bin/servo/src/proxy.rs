@@ -126,7 +126,10 @@ impl ProxyHttp for Proxy {
                         _ => val.to_string(),
                     };
 
-                    if let Err(e) = req_header.insert_header(key.to_owned(), &val_str) {
+                    let safe_key = format!("X-Gateway-{}", key);
+                    let _ = req_header.remove_header(&safe_key);
+
+                    if let Err(e) = req_header.insert_header(safe_key, &val_str) {
                         warn!("Failed to insert header {key}: {e}");
                     }
                 }
