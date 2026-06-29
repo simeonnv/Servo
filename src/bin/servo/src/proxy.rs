@@ -46,6 +46,13 @@ impl ProxyHttp for Proxy {
 
         let req_header = session.req_header_mut();
 
+        let is_websocket = req_header
+            .headers
+            .get(http::header::UPGRADE)
+            .and_then(|v| v.to_str().ok())
+            .map(|s| s.to_lowercase() == "websocket")
+            .unwrap_or(false);
+
         let gateway_headers: Vec<String> = req_header
             .headers
             .keys()
@@ -149,14 +156,6 @@ impl ProxyHttp for Proxy {
         } else {
             None
         };
-        session.enable_retry_buffering();
-
-        let body = session.read_request_body().await?;
-        if let Some(data) = body {
-            let mut hasher = DefaultHasher::new();
-            hasher.write(&data);
-            ctx.body_hash = Some(hasher.finish());
-        }
 
         let after_filter_ctx = AfterFilterCTX {
             server: server.clone(),
@@ -167,6 +166,19 @@ impl ProxyHttp for Proxy {
         };
 
         ctx.after_filter = Some(after_filter_ctx);
+
+        if !is_websocket {
+            session.enable_retry_buffering();
+
+            let body = session.read_request_body().await?;
+            if let Some(data) = body {
+                let mut hasher = DefaultHasher::new();
+                hasher.write(&data);
+                ctx.body_hash = Some(hasher.finish());
+            }
+        } else {
+            debug!("WebSocket connection detected. Skipping body parsing & buffering.");
+        }
 
         Ok(false)
     }
